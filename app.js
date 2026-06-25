@@ -99,6 +99,8 @@ const inviteModalContent = $('inviteModalContent');
 // ── UTILS ──
 function showToast(m, d = 2500) { toast.textContent = m; toast.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove('show'), d); }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function linkify(text) { return text.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'); }
+function renderText(text) { return linkify(esc(text)).replace(/\n/g, '<br>'); }
 function isOverdue(t) { return t.dueAt && !t.done && t.dueAt.toDate().getTime() < Date.now(); }
 function isDueSoon(t) { if (!t.dueAt || t.done) return false; const d = t.dueAt.toDate().getTime() - Date.now(); return d > 0 && d <= 3600000; }
 function formatDue(ts) {
@@ -217,15 +219,15 @@ function showTeamSetup() {
     const snap = await db.collection('teams').where('inviteCode', '==', code).get();
     if (snap.empty) return showToast('Invalid invite code');
     const teamDoc = snap.docs[0];
-    await teamDoc.ref.set({ 
-  members: { 
-    [currentUser.email]: { 
-      name: currentUser.displayName, 
-      avatar: currentUser.photoURL, 
-      role: 'member' 
-    } 
-  } 
-}, { merge: true });
+    await teamDoc.ref.set({
+      members: {
+        [currentUser.email]: {
+          name: currentUser.displayName,
+          avatar: currentUser.photoURL,
+          role: 'member'
+        }
+      }
+    }, { merge: true });
     await db.collection('users').doc(currentUser.uid).update({ teamId: teamDoc.id });
     loadTeam(teamDoc.id);
   };
@@ -359,7 +361,7 @@ function renderList() {
     if (task.tag) meta.push(`<span class="task-tag ${task.tag}">${tagLabelsMap[task.tag] || task.tag}</span>`);
     meta = meta.filter(Boolean);
     const mHTML = meta.length ? `<div class="task-meta">${meta.join('')}</div>` : '';
-    li.innerHTML = `<div class="drag-handle"><span></span><span></span><span></span></div><div class="checkbox" data-action="toggle"><svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2.5,6 5,8.5 9.5,3.5"/></svg></div><div class="task-content"><div class="task-name">${esc(task.text)}</div>${mHTML}</div><div class="task-actions"><button class="edit-btn" data-action="edit"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2-8 8H3.5v-2z"/><path d="M9.5 4.5l2 2"/></svg></button><button class="delete-btn" data-action="delete"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button></div>`;
+    li.innerHTML = `<div class="drag-handle"><span></span><span></span><span></span></div><div class="checkbox" data-action="toggle"><svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2.5,6 5,8.5 9.5,3.5"/></svg></div><div class="task-content"><div class="task-name">${renderText(task.text)}</div>${mHTML}</div><div class="task-actions"><button class="edit-btn" data-action="edit"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2-8 8H3.5v-2z"/><path d="M9.5 4.5l2 2"/></svg></button><button class="delete-btn" data-action="delete"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button></div>`;
     taskList.appendChild(li);
   });
 }
@@ -379,7 +381,7 @@ function renderKanban() {
       card.dataset.id = task.id; card.draggable = true;
       let meta = [dueMeta(task), prioMeta(task), assigneeMeta(task)].filter(Boolean);
       const mHTML = meta.length ? `<div class="k-card-meta">${meta.join('')}</div>` : '';
-      card.innerHTML = `<div class="k-card-top"><div class="k-card-check" data-action="toggle"><svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,5 4,7 8,3"/></svg></div><span class="k-card-name">${esc(task.text)}</span><div class="k-card-actions"><button data-action="edit"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2-8 8H3.5v-2z"/><path d="M9.5 4.5l2 2"/></svg></button><button data-action="delete"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button></div></div>${mHTML}`;
+      card.innerHTML = `<div class="k-card-top"><div class="k-card-check" data-action="toggle"><svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,5 4,7 8,3"/></svg></div><span class="k-card-name">${renderText(task.text)}</span><div class="k-card-actions"><button data-action="edit"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2-8 8H3.5v-2z"/><path d="M9.5 4.5l2 2"/></svg></button><button data-action="delete"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button></div></div>${mHTML}`;
       cl.appendChild(card);
     });
     col.appendChild(cl); kanbanBoard.appendChild(col);
@@ -423,9 +425,11 @@ function startEdit(tid) {
   const li = taskList.querySelector(`[data-id="${tid}"]`); if (!li) return;
   li.classList.add('editing'); li.draggable = false;
   const assigneeOpts = Object.entries(teamMembers).map(([email, m]) => `<option value="${email}"${task.assignee === email ? ' selected' : ''}>${m.name}</option>`).join('');
-  li.innerHTML = `<div class="edit-form"><input type="text" class="edit-text" value="${esc(task.text)}"><div class="edit-form-options"><input type="datetime-local" class="opt-datetime edit-due" value="${toLocal(task.dueAt)}"><select class="opt-select edit-priority">${priorityOptions.map(([v, l]) => `<option value="${v}"${task.priority === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-tag">${tagOptions.map(([v, l]) => `<option value="${v}"${task.tag === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-assignee"><option value="">Assign to</option>${assigneeOpts}</select><div class="edit-form-actions"><button class="edit-cancel-btn" data-action="edit-cancel">Cancel</button><button class="edit-save-btn" data-action="edit-save">Save</button></div></div></div>`;
+  li.innerHTML = `<div class="edit-form"><textarea class="edit-text" rows="1">${esc(task.text)}</textarea><div class="edit-form-options"><input type="datetime-local" class="opt-datetime edit-due" value="${toLocal(task.dueAt)}"><select class="opt-select edit-priority">${priorityOptions.map(([v, l]) => `<option value="${v}"${task.priority === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-tag">${tagOptions.map(([v, l]) => `<option value="${v}"${task.tag === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-assignee"><option value="">Assign to</option>${assigneeOpts}</select><div class="edit-form-actions"><button class="edit-cancel-btn" data-action="edit-cancel">Cancel</button><button class="edit-save-btn" data-action="edit-save">Save</button></div></div></div>`;
   const inp = li.querySelector('.edit-text'); inp.focus();
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') saveEdit(tid, li); if (e.key === 'Escape') renderAll(); });
+  inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px';
+  inp.addEventListener('input', () => { inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(tid, li); } if (e.key === 'Escape') renderAll(); });
 }
 
 function saveEdit(tid, li) {
@@ -447,16 +451,20 @@ function addTask() {
   const maxPos = tasks.reduce((m, t) => Math.max(m, t.position || 0), 0);
   db.collection('teams').doc(currentTeam.id).collection('tasks').add({
     text, tag: tagSelect.value || null, priority: prioritySelect.value || null,
-    dueAt: dueInput.value ? firebase.firestore.Timestamp.fromDate(new Date(dueInput.value)) : null,
+    dueAt: dueInput.value ? firebase.firestore. Timestamp.fromDate(new Date(dueInput.value)) : null,
     assignee: assigneeSelect.value || null, done: false,
     createdBy: currentUser.email, position: maxPos + 1,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    createdAt: firebase.firestore. FieldValue.serverTimestamp()
   });
   taskInput.value = ''; dueInput.value = ''; prioritySelect.value = ''; tagSelect.value = ''; assigneeSelect.value = '';
+  taskInput.style.height = 'auto';
   taskInput.focus();
 }
 addBtn.onclick = addTask;
-taskInput.onkeydown = e => { if (e.key === 'Enter') addTask(); };
+taskInput.onkeydown = e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addTask(); }
+};
+taskInput.oninput = () => { taskInput.style.height = 'auto'; taskInput.style.height = taskInput.scrollHeight + 'px'; };
 
 // ── LIST EVENTS ──
 taskList.addEventListener('click', e => {
