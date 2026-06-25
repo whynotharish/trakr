@@ -217,7 +217,15 @@ function showTeamSetup() {
     const snap = await db.collection('teams').where('inviteCode', '==', code).get();
     if (snap.empty) return showToast('Invalid invite code');
     const teamDoc = snap.docs[0];
-    await teamDoc.ref.update({ [`members.${currentUser.email}`]: { name: currentUser.displayName, avatar: currentUser.photoURL, role: 'member' } });
+    await teamDoc.ref.set({ 
+  members: { 
+    [currentUser.email]: { 
+      name: currentUser.displayName, 
+      avatar: currentUser.photoURL, 
+      role: 'member' 
+    } 
+  } 
+}, { merge: true });
     await db.collection('users').doc(currentUser.uid).update({ teamId: teamDoc.id });
     loadTeam(teamDoc.id);
   };
