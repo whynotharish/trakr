@@ -40,6 +40,9 @@ const bgThemes = [
 ];
 const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const recurDayKeys = ['sun','mon','tue','wed','thu','fri','sat'];
+const recurDayLabels = ['S','M','T','W','T','F','S'];
+const recurDayNames = {sun:'Sun',mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat'};
 
 // ── STATE ──
 let currentUser = null;
@@ -54,6 +57,7 @@ let isDark = localStorage.getItem('trakr_dark') === 'true';
 let dragSrcId = null;
 let unsubTasks = null;
 let unsubTeam = null;
+let recurDaysInput = [];
 
 // ── DOM ──
 const $ = id => document.getElementById(id);
@@ -95,6 +99,8 @@ const inviteTeamBtn = $('inviteTeamBtn');
 const signOutBtn = $('signOutBtn');
 const inviteModal = $('inviteModal');
 const inviteModalContent = $('inviteModalContent');
+const repeatBtn = $('repeatBtn');
+const dayPicker = $('dayPicker');
 
 // ── UTILS ──
 function showToast(m, d = 2500) { toast.textContent = m; toast.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove('show'), d); }
@@ -123,8 +129,37 @@ function assigneeMeta(t) {
   if (!m) return `<span class="assignee-badge">${esc(t.assignee)}</span>`;
   return `<span class="assignee-badge"><img src="${m.avatar}" alt="">${esc(m.name.split(' ')[0])}</span>`;
 }
+function recurMeta(t) {
+  if (!t.recurDays || !t.recurDays.length) return '';
+  const label = t.recurDays.map(d => recurDayNames[d] || d).join(', ');
+  return `<span class="recur-badge"><svg viewBox="0 0 16 16" stroke-width="1.5" stroke-linecap="round"><path d="M2 8a6 6 0 0111.3-2.8M14 8a6 6 0 01-11.3 2.8"/><path d="M14 2v4h-4M2 14v-4h4"/></svg>${label}</span>`;
+}
 function sortByDue(a) { return [...a].sort((a, b) => { if (!a.dueAt && !b.dueAt) return 0; if (!a.dueAt) return 1; if (!b.dueAt) return -1; return a.dueAt.toDate() - b.dueAt.toDate(); }); }
 function genCode() { return Math.random().toString(36).slice(2, 8).toUpperCase(); }
+
+function getNextRecurDate(rDays, refTime) {
+  const dayMap = {sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const todayNum = today.getDay();
+  const targets = rDays.map(d => dayMap[d]).filter(n => n !== undefined).sort((a,b) => a - b);
+  if (!targets.length) return new Date();
+  let diff = null;
+  for (const t of targets) {
+    const d = t - todayNum;
+    if (d > 0) { diff = d; break; }
+  }
+  if (diff === null) diff = 7 - todayNum + targets[0];
+  const next = new Date(today);
+  next.setDate(today.getDate() + diff);
+  if (refTime) {
+    const rt = refTime instanceof Date ? refTime : refTime.toDate();
+    next.setHours(rt.getHours(), rt.getMinutes(), 0, 0);
+  } else {
+    next.setHours(9, 0, 0, 0);
+  }
+  return next;
+}
 
 // ── SHOW VIEWS ──
 function showView(name) {
@@ -165,6 +200,31 @@ darkToggle.onclick = () => { isDark = !isDark; applyTheme(); };
 themeToggleBtn.onclick = e => { e.stopPropagation(); themePanel.classList.toggle('open'); panelOverlay.classList.toggle('open'); };
 panelOverlay.onclick = () => { themePanel.classList.remove('open'); panelOverlay.classList.remove('open'); };
 applyTheme();
+
+// ── RECURRING INPUT ──
+function buildDayPicker(container, selectedDays, onChange) {
+  container.innerHTML = '';
+  recurDayKeys.forEach((key, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'day-toggle' + (selectedDays.includes(key) ? ' active' : '');
+    btn.textContent = recurDayLabels[i];
+    btn.onclick = () => {
+      const idx = selectedDays.indexOf(key);
+      if (idx > -1) selectedDays.splice(idx, 1); else selectedDays.push(key);
+      btn.classList.toggle('active', selectedDays.includes(key));
+      if (onChange) onChange(selectedDays);
+    };
+    container.appendChild(btn);
+  });
+}
+
+buildDayPicker(dayPicker, recurDaysInput);
+repeatBtn.onclick = () => {
+  const isActive = repeatBtn.classList.toggle('active');
+  dayPicker.classList.toggle('open', isActive);
+  if (!isActive) { recurDaysInput.length = 0; dayPicker.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active')); }
+};
 
 // ── AUTH ──
 $('googleSignIn').onclick = () => {
@@ -357,7 +417,7 @@ function renderList() {
     const li = document.createElement('li');
     li.className = 'task-item' + (task.done ? ' done' : '');
     li.dataset.id = task.id; li.draggable = true;
-    let meta = [dueMeta(task), prioMeta(task), assigneeMeta(task)];
+    let meta = [dueMeta(task), prioMeta(task), assigneeMeta(task), recurMeta(task)];
     if (task.tag) meta.push(`<span class="task-tag ${task.tag}">${tagLabelsMap[task.tag] || task.tag}</span>`);
     meta = meta.filter(Boolean);
     const mHTML = meta.length ? `<div class="task-meta">${meta.join('')}</div>` : '';
@@ -379,7 +439,7 @@ function renderKanban() {
     colTasks.forEach(task => {
       const card = document.createElement('li'); card.className = 'kanban-card' + (task.done ? ' done' : '');
       card.dataset.id = task.id; card.draggable = true;
-      let meta = [dueMeta(task), prioMeta(task), assigneeMeta(task)].filter(Boolean);
+      let meta = [dueMeta(task), prioMeta(task), assigneeMeta(task), recurMeta(task)].filter(Boolean);
       const mHTML = meta.length ? `<div class="k-card-meta">${meta.join('')}</div>` : '';
       card.innerHTML = `<div class="k-card-top"><div class="k-card-check" data-action="toggle"><svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,5 4,7 8,3"/></svg></div><span class="k-card-name">${renderText(task.text)}</span><div class="k-card-actions"><button data-action="edit"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2-8 8H3.5v-2z"/><path d="M9.5 4.5l2 2"/></svg></button><button data-action="delete"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button></div></div>${mHTML}`;
       cl.appendChild(card);
@@ -411,7 +471,7 @@ function setupKanbanDrag() {
     const card = e.target.closest('.kanban-card'); if (!card) return;
     const id = card.dataset.id, action = btn.dataset.action;
     const ref = db.collection('teams').doc(currentTeam.id).collection('tasks').doc(id);
-    if (action === 'toggle') { const t = tasks.find(t => t.id === id); if (t) ref.update({ done: !t.done }); }
+    if (action === 'toggle') { handleToggle(id, ref); }
     else if (action === 'delete') ref.delete();
     else if (action === 'edit') { setView('list'); setTimeout(() => startEdit(id), 100); }
   });
@@ -419,20 +479,53 @@ function setupKanbanDrag() {
 
 function renderAll() { updateStats(); checkNotifs(); if (currentView === 'kanban') renderKanban(); else renderList(); }
 
+// ── TOGGLE WITH RECURRING ──
+function handleToggle(id, ref) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  ref.update({ done: !t.done });
+  if (!t.done && t.recurDays && t.recurDays.length > 0) {
+    const nextDate = getNextRecurDate(t.recurDays, t.dueAt);
+    const maxPos = tasks.reduce((m, t) => Math.max(m, t.position || 0), 0);
+    db.collection('teams').doc(currentTeam.id).collection('tasks').add({
+      text: t.text,
+      tag: t.tag || null,
+      priority: t.priority || null,
+      dueAt: firebase.firestore. Timestamp.fromDate(nextDate),
+      assignee: t.assignee || null,
+      recurDays: t.recurDays,
+      done: false,
+      createdBy: currentUser.email,
+      position: maxPos + 1,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Next occurrence created');
+  }
+}
+
 // ── EDIT ──
 function startEdit(tid) {
   const task = tasks.find(t => t.id === tid); if (!task) return;
   const li = taskList.querySelector(`[data-id="${tid}"]`); if (!li) return;
   li.classList.add('editing'); li.draggable = false;
+  const editRecurDays = task.recurDays ? [...task.recurDays] : [];
   const assigneeOpts = Object.entries(teamMembers).map(([email, m]) => `<option value="${email}"${task.assignee === email ? ' selected' : ''}>${m.name}</option>`).join('');
-  li.innerHTML = `<div class="edit-form"><textarea class="edit-text" rows="1">${esc(task.text)}</textarea><div class="edit-form-options"><input type="datetime-local" class="opt-datetime edit-due" value="${toLocal(task.dueAt)}"><select class="opt-select edit-priority">${priorityOptions.map(([v, l]) => `<option value="${v}"${task.priority === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-tag">${tagOptions.map(([v, l]) => `<option value="${v}"${task.tag === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-assignee"><option value="">Assign to</option>${assigneeOpts}</select><div class="edit-form-actions"><button class="edit-cancel-btn" data-action="edit-cancel">Cancel</button><button class="edit-save-btn" data-action="edit-save">Save</button></div></div></div>`;
+  li.innerHTML = `<div class="edit-form"><textarea class="edit-text" rows="1">${esc(task.text)}</textarea><div class="edit-form-options"><input type="datetime-local" class="opt-datetime edit-due" value="${toLocal(task.dueAt)}"><select class="opt-select edit-priority">${priorityOptions.map(([v, l]) => `<option value="${v}"${task.priority === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-tag">${tagOptions.map(([v, l]) => `<option value="${v}"${task.tag === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-assignee"><option value="">Assign to</option>${assigneeOpts}</select><button type="button" class="repeat-btn edit-repeat-btn ${editRecurDays.length ? 'active' : ''}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 8a6 6 0 0111.3-2.8M14 8a6 6 0 01-11.3 2.8"/><path d="M14 2v4h-4M2 14v-4h4"/></svg>Repeat</button><div class="edit-form-actions"><button class="edit-cancel-btn" data-action="edit-cancel">Cancel</button><button class="edit-save-btn" data-action="edit-save">Save</button></div></div><div class="day-picker edit-day-picker ${editRecurDays.length ? 'open' : ''}"></div></div>`;
   const inp = li.querySelector('.edit-text'); inp.focus();
   inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px';
   inp.addEventListener('input', () => { inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; });
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(tid, li); } if (e.key === 'Escape') renderAll(); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(tid, li, editRecurDays); } if (e.key === 'Escape') renderAll(); });
+  const editDayPicker = li.querySelector('.edit-day-picker');
+  buildDayPicker(editDayPicker, editRecurDays);
+  const editRepeatBtn = li.querySelector('.edit-repeat-btn');
+  editRepeatBtn.onclick = () => {
+    const isActive = editRepeatBtn.classList.toggle('active');
+    editDayPicker.classList.toggle('open', isActive);
+    if (!isActive) { editRecurDays.length = 0; editDayPicker.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active')); }
+  };
 }
 
-function saveEdit(tid, li) {
+function saveEdit(tid, li, editRecurDays) {
   const text = li.querySelector('.edit-text').value.trim(); if (!text) return;
   const dv = li.querySelector('.edit-due').value;
   const ref = db.collection('teams').doc(currentTeam.id).collection('tasks').doc(tid);
@@ -440,7 +533,8 @@ function saveEdit(tid, li) {
     text, dueAt: dv ? firebase.firestore.Timestamp.fromDate(new Date(dv)) : null,
     priority: li.querySelector('.edit-priority').value || null,
     tag: li.querySelector('.edit-tag').value || null,
-    assignee: li.querySelector('.edit-assignee').value || null
+    assignee: li.querySelector('.edit-assignee').value || null,
+    recurDays: editRecurDays && editRecurDays.length > 0 ? editRecurDays : null
   });
   showToast('Updated');
 }
@@ -449,14 +543,26 @@ function saveEdit(tid, li) {
 function addTask() {
   const text = taskInput.value.trim(); if (!text) return;
   const maxPos = tasks.reduce((m, t) => Math.max(m, t.position || 0), 0);
+  const hasRecur = recurDaysInput.length > 0;
+  let dueAt = null;
+  if (dueInput.value) {
+    dueAt = firebase.firestore.Timestamp.fromDate(new Date(dueInput.value));
+  } else if (hasRecur) {
+    dueAt = firebase.firestore.Timestamp.fromDate(getNextRecurDate(recurDaysInput, null));
+  }
   db.collection('teams').doc(currentTeam.id).collection('tasks').add({
     text, tag: tagSelect.value || null, priority: prioritySelect.value || null,
-    dueAt: dueInput.value ? firebase.firestore. Timestamp.fromDate(new Date(dueInput.value)) : null,
+    dueAt: dueAt,
     assignee: assigneeSelect.value || null, done: false,
+    recurDays: hasRecur ? [...recurDaysInput] : null,
     createdBy: currentUser.email, position: maxPos + 1,
-    createdAt: firebase.firestore. FieldValue.serverTimestamp()
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
   taskInput.value = ''; dueInput.value = ''; prioritySelect.value = ''; tagSelect.value = ''; assigneeSelect.value = '';
+  recurDaysInput.length = 0;
+  repeatBtn.classList.remove('active');
+  dayPicker.classList.remove('open');
+  dayPicker.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active'));
   taskInput.style.height = 'auto';
   taskInput.focus();
 }
@@ -471,10 +577,10 @@ taskList.addEventListener('click', e => {
   const item = e.target.closest('[data-action]'); if (!item) return;
   const li = e.target.closest('.task-item'); const id = li.dataset.id, action = item.dataset.action;
   const ref = db.collection('teams').doc(currentTeam.id).collection('tasks').doc(id);
-  if (action === 'toggle') { const t = tasks.find(t => t.id === id); if (t) ref.update({ done: !t.done }); }
+  if (action === 'toggle') { handleToggle(id, ref); }
   else if (action === 'delete') { li.classList.add('removing'); setTimeout(() => ref.delete(), 200); }
   else if (action === 'edit') startEdit(id);
-  else if (action === 'edit-save') saveEdit(id, li);
+  else if (action === 'edit-save') { const task = tasks.find(t => t.id === id); const editRecurDays = task && task.recurDays ? [...task.recurDays] : []; saveEdit(id, li, editRecurDays); }
   else if (action === 'edit-cancel') renderAll();
 });
 
