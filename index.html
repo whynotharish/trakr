@@ -136,6 +136,19 @@
   .add-btn:hover { background:var(--accent-hover); }
   .add-btn:active { transform:scale(0.97); }
 
+  /* RECURRING */
+  .repeat-btn { display:flex; align-items:center; gap:4px; background:var(--input-bg); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:11px; font-family:var(--font-body); color:var(--text-muted); cursor:pointer; transition:all 0.15s; }
+  .repeat-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .repeat-btn.active { background:var(--accent); border-color:var(--accent); color:white; }
+  .repeat-btn svg { width:12px; height:12px; }
+  .day-picker { display:none; gap:4px; margin-top:8px; }
+  .day-picker.open { display:flex; }
+  .day-toggle { width:30px; height:30px; border-radius:50%; border:1.5px solid var(--border); background:var(--input-bg); font-size:10px; font-weight:700; color:var(--text-muted); cursor:pointer; transition:all 0.15s; font-family:var(--font-body); }
+  .day-toggle:hover { border-color:var(--accent); color:var(--accent); }
+  .day-toggle.active { background:var(--accent); border-color:var(--accent); color:white; }
+  .recur-badge { font-size:9px; color:var(--accent); display:flex; align-items:center; gap:2px; font-weight:600; }
+  .recur-badge svg { width:10px; height:10px; stroke:currentColor; fill:none; }
+
   /* LIST */
   .list-view {} body.kanban-mode .list-view { display:none; }
   .filter-row { display:flex; gap:5px; margin-bottom:16px; flex-wrap:wrap; }
@@ -325,9 +338,11 @@
         <select class="opt-select" id="prioritySelect"><option value="">Priority</option><option value="p0">P0</option><option value="p1">P1</option></select>
         <select class="opt-select" id="tagSelect"><option value="">Tag</option><option value="wondermart">Wondermart</option><option value="merch">Merch</option><option value="whatsapp">Whatsapp</option><option value="comms">Comms</option><option value="sql">Sql/Dashboard</option><option value="personal">Personal</option><option value="qc">QC/Aashish</option></select>
         <select class="opt-select" id="assigneeSelect"><option value="">Assign to</option></select>
+        <button class="repeat-btn" id="repeatBtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 8a6 6 0 0111.3-2.8M14 8a6 6 0 01-11.3 2.8"/><path d="M14 2v4h-4M2 14v-4h4"/></svg>Repeat</button>
         <span class="spacer"></span>
         <button class="add-btn" id="addBtn">Add</button>
       </div>
+      <div class="day-picker" id="dayPicker"></div>
     </div>
 
     <div class="list-view">
