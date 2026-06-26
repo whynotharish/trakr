@@ -53,11 +53,20 @@ let currentFilter = 'all';
 let currentView = localStorage.getItem('trakr_view') || 'list';
 let currentAccent = JSON.parse(localStorage.getItem('trakr_theme') || 'null') || accentColors[0];
 let currentBg = JSON.parse(localStorage.getItem('trakr_bg') || 'null') || bgThemes[0];
-let isDark = localStorage.getItem('trakr_dark') === 'true';
+let storedDark = localStorage.getItem('trakr_dark');
+let themeMode = (storedDark === 'dark' || storedDark === 'light' || storedDark === 'auto') ? storedDark : (storedDark === 'true' ? 'dark' : 'light');
+let isDark = false;
 let dragSrcId = null;
 let unsubTasks = null;
 let unsubTeam = null;
 let recurDaysInput = [];
+const systemDarkMQ = window.matchMedia('(prefers-color-scheme: dark)');
+
+function resolveIsDark() {
+  if (themeMode === 'dark') return true;
+  if (themeMode === 'light') return false;
+  return systemDarkMQ.matches;
+}
 
 // ── DOM ──
 const $ = id => document.getElementById(id);
@@ -89,7 +98,6 @@ const kanbanBoard = $('kanbanBoard');
 const toast = $('toast');
 const themePanel = $('themePanel');
 const themeToggleBtn = $('themeToggleBtn');
-const darkToggle = $('darkToggle');
 const panelOverlay = $('panelOverlay');
 const swatchesEl = $('swatches');
 const bgSwatchesEl = $('bgSwatches');
@@ -101,6 +109,7 @@ const inviteModal = $('inviteModal');
 const inviteModalContent = $('inviteModalContent');
 const repeatBtn = $('repeatBtn');
 const dayPicker = $('dayPicker');
+const themeModeRow = $('themeModeRow');
 
 // ── UTILS ──
 function showToast(m, d = 2500) { toast.textContent = m; toast.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove('show'), d); }
@@ -178,6 +187,7 @@ dateDisplay.textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${no
 
 // ── THEME ──
 function applyTheme() {
+  isDark = resolveIsDark();
   const r = document.documentElement.style;
   r.setProperty('--accent', currentAccent.value);
   r.setProperty('--accent-hover', currentAccent.hover);
@@ -187,16 +197,19 @@ function applyTheme() {
   r.setProperty('--input-bg', p.inputBg); r.setProperty('--text-muted', p.txtMuted); r.setProperty('--text', p.txt);
   document.querySelectorAll('.logo-dot').forEach(d => d.style.background = currentAccent.value);
   document.documentElement.classList.toggle('dark', isDark);
-  darkToggle.classList.toggle('on', isDark);
   swatchesEl.querySelectorAll('.swatch').forEach(s => s.classList.toggle('active', s.dataset.color === currentAccent.value));
   bgSwatchesEl.querySelectorAll('.swatch').forEach(s => s.classList.toggle('active', s.dataset.color === currentBg.swatch));
+  themeModeRow.querySelectorAll('.theme-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === themeMode));
   localStorage.setItem('trakr_theme', JSON.stringify(currentAccent));
   localStorage.setItem('trakr_bg', JSON.stringify(currentBg));
-  localStorage.setItem('trakr_dark', isDark);
+  localStorage.setItem('trakr_dark', themeMode);
 }
 accentColors.forEach(c => { const s = document.createElement('div'); s.className = 'swatch'; s.dataset.color = c.value; s.style.background = c.value; s.title = c.name; s.onclick = () => { currentAccent = c; applyTheme(); }; swatchesEl.appendChild(s); });
 bgThemes.forEach(b => { const s = document.createElement('div'); s.className = 'swatch'; s.dataset.color = b.swatch; s.style.background = b.swatch; s.style.border = '1px solid #ccc'; s.title = b.name; s.onclick = () => { currentBg = b; applyTheme(); }; bgSwatchesEl.appendChild(s); });
-darkToggle.onclick = () => { isDark = !isDark; applyTheme(); };
+themeModeRow.querySelectorAll('.theme-mode-btn').forEach(btn => {
+  btn.onclick = () => { themeMode = btn.dataset.mode; applyTheme(); };
+});
+systemDarkMQ.addEventListener('change', () => { if (themeMode === 'auto') applyTheme(); });
 themeToggleBtn.onclick = e => { e.stopPropagation(); themePanel.classList.toggle('open'); panelOverlay.classList.toggle('open'); };
 panelOverlay.onclick = () => { themePanel.classList.remove('open'); panelOverlay.classList.remove('open'); };
 applyTheme();
