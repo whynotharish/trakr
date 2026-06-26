@@ -505,7 +505,7 @@ function handleToggle(id, ref) {
       text: t.text,
       tag: t.tag || null,
       priority: t.priority || null,
-      dueAt: firebase.firestore. Timestamp.fromDate(nextDate),
+      dueAt: firebase.firestore.Timestamp.fromDate(nextDate),
       assignee: t.assignee || null,
       recurDays: t.recurDays,
       done: false,
@@ -523,10 +523,10 @@ function startEdit(tid) {
   currentEditRecurDays = [];
   const li = taskList.querySelector(`[data-id="${tid}"]`); if (!li) return;
   li.classList.add('editing'); li.draggable = false;
-    const editRecurDays = task.recurDays ? [...task.recurDays] : [];
+  const editRecurDays = task.recurDays ? [...task.recurDays] : [];
   currentEditRecurDays = editRecurDays;
   const assigneeOpts = Object.entries(teamMembers).map(([email, m]) => `<option value="${email}"${task.assignee === email ? ' selected' : ''}>${m.name}</option>`).join('');
-  <div class="edit-form-actions"><button class="delete-btn" data-action="edit-delete" style="opacity:0.5;margin-right:auto"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button><button class="edit-cancel-btn" data-action="edit-cancel">Cancel</button><button class="edit-save-btn" data-action="edit-save">Save</button></div>
+  li.innerHTML = `<div class="edit-form"><textarea class="edit-text" rows="1">${esc(task.text)}</textarea><div class="edit-form-options"><input type="datetime-local" class="opt-datetime edit-due" value="${toLocal(task.dueAt)}"><select class="opt-select edit-priority">${priorityOptions.map(([v, l]) => `<option value="${v}"${task.priority === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-tag">${tagOptions.map(([v, l]) => `<option value="${v}"${task.tag === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-assignee"><option value="">Assign to</option>${assigneeOpts}</select><button type="button" class="repeat-btn edit-repeat-btn ${editRecurDays.length ? 'active' : ''}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 8a6 6 0 0111.3-2.8M14 8a6 6 0 01-11.3 2.8"/><path d="M14 2v4h-4M2 14v-4h4"/></svg>Repeat</button><div class="edit-form-actions"><button class="delete-btn" data-action="edit-delete" style="opacity:0.5;margin-right:auto"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button><button class="edit-cancel-btn" data-action="edit-cancel">Cancel</button><button class="edit-save-btn" data-action="edit-save">Save</button></div></div><div class="day-picker edit-day-picker ${editRecurDays.length ? 'open' : ''}"></div></div>`;
   const inp = li.querySelector('.edit-text'); inp.focus();
   inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px';
   inp.addEventListener('input', () => { inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; });
@@ -596,7 +596,7 @@ taskList.addEventListener('click', e => {
   if (action === 'toggle') { handleToggle(id, ref); }
   else if (action === 'delete') { li.classList.add('removing'); setTimeout(() => ref.delete(), 200); }
   else if (action === 'edit') startEdit(id);
-    else if (action === 'edit-save') { saveEdit(id, li, currentEditRecurDays); }
+  else if (action === 'edit-save') { saveEdit(id, li, currentEditRecurDays); }
   else if (action === 'edit-delete') { li.classList.add('removing'); setTimeout(() => db.collection('teams').doc(currentTeam.id).collection('tasks').doc(id).delete(), 200); }
   else if (action === 'edit-cancel') renderAll();
 });
