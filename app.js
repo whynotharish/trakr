@@ -14,6 +14,10 @@ apiKey: "AIzaSyDdkJ0rnj8SMiup_JHL7YLuRNe8R0kIWkY",
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+emailjs.init("2L633_2gZwN-qlCGv");
+const EMAILJS_SERVICE = "service_z74iz3g";
+const EMAILJS_TEMPLATE = "o8w7nw4";
+
 
 // ── CONSTANTS ──
 const tagKeys = ['wondermart','merch','whatsapp','comms','sql','personal','qc'];
@@ -407,13 +411,27 @@ notifToggle.onclick = async () => {
   updateNotifUI();
 };
 function checkNotifs() {
-  if (!notifsOn || !('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!notifsOn || !currentUser) return;
   const now = Date.now(), fm = 300000;
   tasks.forEach(t => {
     if (t.done || !t.dueAt || notifiedIds.has(t.id)) return;
     const diff = t.dueAt.toDate().getTime() - now;
     if (diff <= fm && diff > -fm) {
-      new Notification(`${t.priority ? t.priority.toUpperCase() + ': ' : ''}${t.text}`, { body: diff > 0 ? 'Due in < 5 min' : 'Overdue', tag: t.id });
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(`${t.priority ? t.priority.toUpperCase() + ': ' : ''}${t.text}`, {
+          body: diff > 0 ? 'Due in < 5 min' : 'Overdue', tag: t.id
+        });
+      }
+      const recipientEmail = t.assignee || currentUser.email;
+      const memberInfo = teamMembers[recipientEmail];
+      emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+        to_email: recipientEmail,
+        task_name: t.text,
+        member_name: memberInfo ? memberInfo.name.split(' ')[0] : 'there',
+        priority: t.priority ? t.priority.toUpperCase() + ' — ' : '',
+        status: diff > 0 ? 'due in less than 5 minutes' : 'overdue',
+        description: t.description || ''
+      }).catch(err => console.log('Email error:', err));
       notifiedIds.add(t.id);
       localStorage.setItem('trakr_notified', JSON.stringify([...notifiedIds]));
     }
