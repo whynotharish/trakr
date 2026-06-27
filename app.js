@@ -1,6 +1,5 @@
 // =====================================================
 // TRAKR — app.js
-// Replace the firebaseConfig below with your own.
 // =====================================================
 
 const firebaseConfig = {
@@ -61,6 +60,7 @@ let unsubTasks = null;
 let unsubTeam = null;
 let recurDaysInput = [];
 let currentEditRecurDays = [];
+let expandedTaskId = null;
 const systemDarkMQ = window.matchMedia('(prefers-color-scheme: dark)');
 
 function resolveIsDark() {
@@ -144,6 +144,12 @@ function recurMeta(t) {
   const label = t.recurDays.map(d => recurDayNames[d] || d).join(', ');
   return `<span class="recur-badge"><svg viewBox="0 0 16 16" stroke-width="1.5" stroke-linecap="round"><path d="M2 8a6 6 0 0111.3-2.8M14 8a6 6 0 01-11.3 2.8"/><path d="M14 2v4h-4M2 14v-4h4"/></svg>${label}</span>`;
 }
+function subtaskMeta(t) {
+  if (!t.subtasks || !t.subtasks.length) return '';
+  const done = t.subtasks.filter(s => s.done).length;
+  const total = t.subtasks.length;
+  return `<span class="subtask-count"><svg viewBox="0 0 12 12" stroke-width="1.3"><rect x="1.5" y="1.5" width="9" height="9" rx="1.5"/><polyline points="3.5,6 5.5,8 8.5,4" fill="none"/></svg>${done}/${total}</span>`;
+}
 function sortByDue(a) { return [...a].sort((a, b) => { if (!a.dueAt && !b.dueAt) return 0; if (!a.dueAt) return 1; if (!b.dueAt) return -1; return a.dueAt.toDate() - b.dueAt.toDate(); }); }
 function genCode() { return Math.random().toString(36).slice(2, 8).toUpperCase(); }
 
@@ -170,6 +176,8 @@ function getNextRecurDate(rDays, refTime) {
   }
   return next;
 }
+
+function taskRef(id) { return db.collection('teams').doc(currentTeam.id).collection('tasks').doc(id); }
 
 // ── SHOW VIEWS ──
 function showView(name) {
@@ -432,6 +440,22 @@ function getFiltered() {
   return [...tasks];
 }
 
+// ── SUBTASK RENDERING ──
+function renderSubtasksHTML(task) {
+  const subs = task.subtasks || [];
+  let html = '';
+  if (task.description) html += `<div class="task-desc">${renderText(task.description)}</div>`;
+  if (subs.length) {
+    html += '<ul class="subtask-list">';
+    subs.forEach((s, i) => {
+      html += `<li class="subtask-item${s.done ? ' done' : ''}"><div class="subtask-check${s.done ? ' done' : ''}" data-action="toggle-subtask" data-index="${i}"><svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,5 4,7 8,3"/></svg></div><span class="subtask-text">${esc(s.text)}</span></li>`;
+    });
+    html += '</ul>';
+  }
+  html += `<div class="subtask-add"><input type="text" placeholder="Add subtask..." data-action="add-subtask-input"></div>`;
+  return html;
+}
+
 // ── LIST RENDER ──
 function renderList() {
   const filtered = getFiltered();
@@ -443,13 +467,16 @@ function renderList() {
 
   filtered.forEach(task => {
     const li = document.createElement('li');
-    li.className = 'task-item' + (task.done ? ' done' : '');
+    const isExpanded = expandedTaskId === task.id;
+    li.className = 'task-item' + (task.done ? ' done' : '') + (isExpanded ? ' expanded' : '');
     li.dataset.id = task.id; li.draggable = true;
-    let meta = [dueMeta(task), prioMeta(task), assigneeMeta(task), recurMeta(task)];
+    let meta = [dueMeta(task), prioMeta(task), assigneeMeta(task), recurMeta(task), subtaskMeta(task)];
     if (task.tag) meta.push(`<span class="task-tag ${task.tag}">${tagLabelsMap[task.tag] || task.tag}</span>`);
     meta = meta.filter(Boolean);
     const mHTML = meta.length ? `<div class="task-meta">${meta.join('')}</div>` : '';
-    li.innerHTML = `<div class="drag-handle"><span></span><span></span><span></span></div><div class="checkbox" data-action="toggle"><svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2.5,6 5,8.5 9.5,3.5"/></svg></div><div class="task-content"><div class="task-name">${renderText(task.text)}</div>${mHTML}</div><div class="task-actions"><button class="edit-btn" data-action="edit"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2-8 8H3.5v-2z"/><path d="M9.5 4.5l2 2"/></svg></button><button class="delete-btn" data-action="delete"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button></div>`;
+    const hasDetails = task.description || (task.subtasks && task.subtasks.length);
+    const expandHTML = `<div class="task-expand">${renderSubtasksHTML(task)}</div>`;
+    li.innerHTML = `<div class="drag-handle"><span></span><span></span><span></span></div><div class="checkbox" data-action="toggle"><svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2.5,6 5,8.5 9.5,3.5"/></svg></div><div class="task-content" data-action="expand"><div class="task-name">${renderText(task.text)}</div>${mHTML}${expandHTML}</div><div class="task-actions"><button class="edit-btn" data-action="edit"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2-8 8H3.5v-2z"/><path d="M9.5 4.5l2 2"/></svg></button><button class="delete-btn" data-action="delete"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button></div>`;
     taskList.appendChild(li);
   });
 }
@@ -467,7 +494,7 @@ function renderKanban() {
     colTasks.forEach(task => {
       const card = document.createElement('li'); card.className = 'kanban-card' + (task.done ? ' done' : '');
       card.dataset.id = task.id; card.draggable = true;
-      let meta = [dueMeta(task), prioMeta(task), assigneeMeta(task), recurMeta(task)].filter(Boolean);
+      let meta = [dueMeta(task), prioMeta(task), assigneeMeta(task), recurMeta(task), subtaskMeta(task)].filter(Boolean);
       const mHTML = meta.length ? `<div class="k-card-meta">${meta.join('')}</div>` : '';
       card.innerHTML = `<div class="k-card-top"><div class="k-card-check" data-action="toggle"><svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2,5 4,7 8,3"/></svg></div><span class="k-card-name">${renderText(task.text)}</span><div class="k-card-actions"><button data-action="edit"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2-8 8H3.5v-2z"/><path d="M9.5 4.5l2 2"/></svg></button><button data-action="delete"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button></div></div>${mHTML}`;
       cl.appendChild(card);
@@ -489,8 +516,7 @@ function setupKanbanDrag() {
       e.preventDefault(); kanbanBoard.querySelectorAll('.drag-over,.drag-over-col').forEach(el => el.classList.remove('drag-over', 'drag-over-col'));
       if (!dragSrcId) return;
       const newTag = cl.dataset.tag === '__none' ? null : cl.dataset.tag;
-      const ref = db.collection('teams').doc(currentTeam.id).collection('tasks').doc(dragSrcId);
-      ref.update({ tag: newTag });
+      taskRef(dragSrcId).update({ tag: newTag });
       showToast(`Moved to ${newTag ? tagLabelsMap[newTag] : 'Untagged'}`);
     });
   });
@@ -498,9 +524,8 @@ function setupKanbanDrag() {
     const btn = e.target.closest('[data-action]'); if (!btn) return;
     const card = e.target.closest('.kanban-card'); if (!card) return;
     const id = card.dataset.id, action = btn.dataset.action;
-    const ref = db.collection('teams').doc(currentTeam.id).collection('tasks').doc(id);
-    if (action === 'toggle') { handleToggle(id, ref); }
-    else if (action === 'delete') ref.delete();
+    if (action === 'toggle') { handleToggle(id); }
+    else if (action === 'delete') taskRef(id).delete();
     else if (action === 'edit') { setView('list'); setTimeout(() => startEdit(id), 100); }
   });
 }
@@ -508,23 +533,20 @@ function setupKanbanDrag() {
 function renderAll() { updateStats(); checkNotifs(); if (currentView === 'kanban') renderKanban(); else renderList(); }
 
 // ── TOGGLE WITH RECURRING ──
-function handleToggle(id, ref) {
+function handleToggle(id) {
   const t = tasks.find(t => t.id === id);
   if (!t) return;
-  ref.update({ done: !t.done });
+  taskRef(id).update({ done: !t.done });
   if (!t.done && t.recurDays && t.recurDays.length > 0) {
     const nextDate = getNextRecurDate(t.recurDays, t.dueAt);
     const maxPos = tasks.reduce((m, t) => Math.max(m, t.position || 0), 0);
     db.collection('teams').doc(currentTeam.id).collection('tasks').add({
-      text: t.text,
-      tag: t.tag || null,
-      priority: t.priority || null,
+      text: t.text, description: t.description || null,
+      tag: t.tag || null, priority: t.priority || null,
       dueAt: firebase.firestore.Timestamp.fromDate(nextDate),
-      assignee: t.assignee || null,
-      recurDays: t.recurDays,
-      done: false,
-      createdBy: currentUser.email,
-      position: maxPos + 1,
+      assignee: t.assignee || null, recurDays: t.recurDays,
+      subtasks: t.subtasks ? t.subtasks.map(s => ({text: s.text, done: false})) : null,
+      done: false, createdBy: currentUser.email, position: maxPos + 1,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     showToast('Next occurrence created');
@@ -539,12 +561,54 @@ function startEdit(tid) {
   li.classList.add('editing'); li.draggable = false;
   const editRecurDays = task.recurDays ? [...task.recurDays] : [];
   currentEditRecurDays = editRecurDays;
+  const editSubtasks = task.subtasks ? task.subtasks.map(s => ({...s})) : [];
   const assigneeOpts = Object.entries(teamMembers).map(([email, m]) => `<option value="${email}"${task.assignee === email ? ' selected' : ''}>${m.name}</option>`).join('');
-  li.innerHTML = `<div class="edit-form"><textarea class="edit-text" rows="1">${esc(task.text)}</textarea><div class="edit-form-options"><input type="datetime-local" class="opt-datetime edit-due" value="${toLocal(task.dueAt)}"><select class="opt-select edit-priority">${priorityOptions.map(([v, l]) => `<option value="${v}"${task.priority === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-tag">${tagOptions.map(([v, l]) => `<option value="${v}"${task.tag === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-assignee"><option value="">Assign to</option>${assigneeOpts}</select><button type="button" class="repeat-btn edit-repeat-btn ${editRecurDays.length ? 'active' : ''}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 8a6 6 0 0111.3-2.8M14 8a6 6 0 01-11.3 2.8"/><path d="M14 2v4h-4M2 14v-4h4"/></svg>Repeat</button><div class="edit-form-actions"><button class="delete-btn" data-action="edit-delete" style="opacity:0.5;margin-right:auto" title="Delete task"><svg viewBox="0 0 16 16" fill="none" stroke="var(--overdue)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h12M5.3 4V2.7a1 1 0 011-1h3.4a1 1 0 011 1V4M6.5 7v4.5M9.5 7v4.5"/><path d="M3.5 4l.7 8.3a1.5 1.5 0 001.5 1.4h4.6a1.5 1.5 0 001.5-1.4l.7-8.3"/></svg></button><button class="edit-cancel-btn" data-action="edit-cancel">Cancel</button><button class="edit-save-btn" data-action="edit-save">Save</button></div></div><div class="day-picker edit-day-picker ${editRecurDays.length ? 'open' : ''}"></div></div>`;
+
+  function renderEditSubtasks(container) {
+    container.innerHTML = '';
+    editSubtasks.forEach((s, i) => {
+      const row = document.createElement('div');
+      row.className = 'edit-subtask-item';
+      row.innerHTML = `<input type="text" value="${esc(s.text)}" data-st-index="${i}"><button class="edit-subtask-remove" data-st-remove="${i}"><svg viewBox="0 0 12 12" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg></button>`;
+      container.appendChild(row);
+    });
+    const addRow = document.createElement('div');
+    addRow.className = 'subtask-add';
+    addRow.innerHTML = `<input type="text" placeholder="Add subtask..." data-st-add>`;
+    container.appendChild(addRow);
+    container.querySelectorAll('[data-st-remove]').forEach(btn => {
+      btn.onclick = () => { editSubtasks.splice(parseInt(btn.dataset.stRemove), 1); renderEditSubtasks(container); };
+    });
+    container.querySelectorAll('[data-st-index]').forEach(inp => {
+      inp.oninput = () => { editSubtasks[parseInt(inp.dataset.stIndex)].text = inp.value; };
+    });
+    const addInput = container.querySelector('[data-st-add]');
+    addInput.onkeydown = e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = addInput.value.trim();
+        if (v) { editSubtasks.push({text: v, done: false}); renderEditSubtasks(container); }
+      }
+    };
+  }
+
+  li.innerHTML = `<div class="edit-form"><textarea class="edit-text" rows="1">${esc(task.text)}</textarea><textarea class="edit-desc" rows="1" placeholder="Add description...">${esc(task.description || '')}</textarea><div class="edit-subtask-list" id="editSubtasks_${tid}"></div><div class="edit-form-options"><input type="datetime-local" class="opt-datetime edit-due" value="${toLocal(task.dueAt)}"><select class="opt-select edit-priority">${priorityOptions.map(([v, l]) => `<option value="${v}"${task.priority === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-tag">${tagOptions.map(([v, l]) => `<option value="${v}"${task.tag === v ? ' selected' : ''}>${l}</option>`).join('')}</select><select class="opt-select edit-assignee"><option value="">Assign to</option>${assigneeOpts}</select><button type="button" class="repeat-btn edit-repeat-btn ${editRecurDays.length ? 'active' : ''}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 8a6 6 0 0111.3-2.8M14 8a6 6 0 01-11.3 2.8"/><path d="M14 2v4h-4M2 14v-4h4"/></svg>Repeat</button><div class="edit-form-actions"><button class="delete-btn" data-action="edit-delete" style="opacity:0.5;margin-right:auto" title="Delete task"><svg viewBox="0 0 16 16" fill="none" stroke="var(--overdue)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h12M5.3 4V2.7a1 1 0 011-1h3.4a1 1 0 011 1V4M6.5 7v4.5M9.5 7v4.5"/><path d="M3.5 4l.7 8.3a1.5 1.5 0 001.5 1.4h4.6a1.5 1.5 0 001.5-1.4l.7-8.3"/></svg></button><button class="edit-cancel-btn" data-action="edit-cancel">Cancel</button><button class="edit-save-btn" data-action="edit-save">Save</button></div></div><div class="day-picker edit-day-picker ${editRecurDays.length ? 'open' : ''}"></div></div>`;
+
+  const stContainer = li.querySelector(`#editSubtasks_${tid}`);
+  renderEditSubtasks(stContainer);
+
+  // store editSubtasks on the li for saveEdit
+  li._editSubtasks = editSubtasks;
+
   const inp = li.querySelector('.edit-text'); inp.focus();
   inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px';
   inp.addEventListener('input', () => { inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; });
   inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(tid, li, editRecurDays); } if (e.key === 'Escape') renderAll(); });
+
+  const descInp = li.querySelector('.edit-desc');
+  descInp.style.height = 'auto'; descInp.style.height = Math.max(descInp.scrollHeight, 22) + 'px';
+  descInp.addEventListener('input', () => { descInp.style.height = 'auto'; descInp.style.height = descInp.scrollHeight + 'px'; });
+
   const editDayPicker = li.querySelector('.edit-day-picker');
   buildDayPicker(editDayPicker, editRecurDays);
   const editRepeatBtn = li.querySelector('.edit-repeat-btn');
@@ -557,14 +621,18 @@ function startEdit(tid) {
 
 function saveEdit(tid, li, editRecurDays) {
   const text = li.querySelector('.edit-text').value.trim(); if (!text) return;
+  const desc = li.querySelector('.edit-desc').value.trim();
   const dv = li.querySelector('.edit-due').value;
-  const ref = db.collection('teams').doc(currentTeam.id).collection('tasks').doc(tid);
-  ref.update({
-    text, dueAt: dv ? firebase.firestore.Timestamp.fromDate(new Date(dv)) : null,
+  const editSubtasks = li._editSubtasks || [];
+  const cleanSubs = editSubtasks.filter(s => s.text.trim()).map(s => ({text: s.text.trim(), done: s.done}));
+  taskRef(tid).update({
+    text, description: desc || null,
+    dueAt: dv ? firebase.firestore.Timestamp.fromDate(new Date(dv)) : null,
     priority: li.querySelector('.edit-priority').value || null,
     tag: li.querySelector('.edit-tag').value || null,
     assignee: li.querySelector('.edit-assignee').value || null,
-    recurDays: editRecurDays && editRecurDays.length > 0 ? editRecurDays : null
+    recurDays: editRecurDays && editRecurDays.length > 0 ? editRecurDays : null,
+    subtasks: cleanSubs.length > 0 ? cleanSubs : null
   });
   showToast('Updated');
 }
@@ -581,7 +649,8 @@ function addTask() {
     dueAt = firebase.firestore.Timestamp.fromDate(getNextRecurDate(recurDaysInput, null));
   }
   db.collection('teams').doc(currentTeam.id).collection('tasks').add({
-    text, tag: tagSelect.value || null, priority: prioritySelect.value || null,
+    text, description: null, subtasks: null,
+    tag: tagSelect.value || null, priority: prioritySelect.value || null,
     dueAt: dueAt,
     assignee: assigneeSelect.value || null, done: false,
     recurDays: hasRecur ? [...recurDaysInput] : null,
@@ -604,15 +673,49 @@ taskInput.oninput = () => { taskInput.style.height = 'auto'; taskInput.style.hei
 
 // ── LIST EVENTS ──
 taskList.addEventListener('click', e => {
+  if (e.target.closest('a')) return;
   const item = e.target.closest('[data-action]'); if (!item) return;
-  const li = e.target.closest('.task-item'); const id = li.dataset.id, action = item.dataset.action;
-  const ref = db.collection('teams').doc(currentTeam.id).collection('tasks').doc(id);
-  if (action === 'toggle') { handleToggle(id, ref); }
-  else if (action === 'delete') { li.classList.add('removing'); setTimeout(() => ref.delete(), 200); }
-  else if (action === 'edit') startEdit(id);
+  const li = e.target.closest('.task-item'); if (!li) return;
+  const id = li.dataset.id, action = item.dataset.action;
+
+  if (action === 'expand') {
+    if (li.classList.contains('editing')) return;
+    expandedTaskId = expandedTaskId === id ? null : id;
+    renderAll();
+    return;
+  }
+  if (action === 'toggle') { handleToggle(id); }
+  else if (action === 'delete') { li.classList.add('removing'); setTimeout(() => taskRef(id).delete(), 200); }
+  else if (action === 'edit') { expandedTaskId = null; startEdit(id); }
   else if (action === 'edit-save') { saveEdit(id, li, currentEditRecurDays); }
-  else if (action === 'edit-delete') { li.classList.add('removing'); setTimeout(() => db.collection('teams').doc(currentTeam.id).collection('tasks').doc(id).delete(), 200); }
+  else if (action === 'edit-delete') { li.classList.add('removing'); setTimeout(() => taskRef(id).delete(), 200); }
   else if (action === 'edit-cancel') renderAll();
+  else if (action === 'toggle-subtask') {
+    const idx = parseInt(item.dataset.index);
+    const task = tasks.find(t => t.id === id);
+    if (!task || !task.subtasks) return;
+    const updated = task.subtasks.map((s, i) => i === idx ? {...s, done: !s.done} : {...s});
+    taskRef(id).update({ subtasks: updated });
+  }
+});
+
+// handle add-subtask input from expanded view
+taskList.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const inp = e.target.closest('[data-action="add-subtask-input"]');
+  if (!inp) return;
+  e.preventDefault();
+  const v = inp.value.trim();
+  if (!v) return;
+  const li = inp.closest('.task-item');
+  if (!li) return;
+  const id = li.dataset.id;
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  const subs = task.subtasks ? [...task.subtasks] : [];
+  subs.push({text: v, done: false});
+  taskRef(id).update({ subtasks: subs });
+  inp.value = '';
 });
 
 // ── LIST DRAG ──
