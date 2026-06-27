@@ -271,6 +271,9 @@ function showTeamSetup() {
     <h2>Join Team</h2>
     <input class="team-input" id="joinCode" placeholder="Enter invite code">
     <button class="team-btn secondary" id="joinTeamBtn">Join Team</button>
+    <div class="divider">or</div>
+    <button class="team-btn secondary" id="skipTeamBtn">Use individually</button>
+    <p style="font-size:11px;margin-bottom:0;margin-top:4px;">You can always invite others later</p>
   `;
   showView('team');
   document.querySelector('.logo-dot').style.background = currentAccent.value;
@@ -304,6 +307,17 @@ function showTeamSetup() {
     }, { merge: true });
     await db.collection('users').doc(currentUser.uid).update({ teamId: teamDoc.id });
     loadTeam(teamDoc.id);
+  };
+
+  $('skipTeamBtn').onclick = async () => {
+    const firstName = currentUser.displayName.split(' ')[0];
+    const code = genCode();
+    const ref = await db.collection('teams').add({
+      name: `${firstName}'s Tasks`, inviteCode: code, createdBy: currentUser.uid, personal: true,
+      members: { [currentUser.email]: { name: currentUser.displayName, avatar: currentUser.photoURL, role: 'admin' } }
+    });
+    await db.collection('users').doc(currentUser.uid).update({ teamId: ref.id });
+    loadTeam(ref.id);
   };
 }
 
