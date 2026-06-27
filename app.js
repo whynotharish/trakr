@@ -541,10 +541,8 @@ function handleToggle(id) {
   if (!t.done && t.recurDays && t.recurDays.length > 0) {
     const nextDate = getNextRecurDate(t.recurDays, t.dueAt);
     const maxPos = tasks.reduce((m, t) => Math.max(m, t.position || 0), 0);
-      const desc = descInput.value.trim();
-  const subs = inputSubtasks.length > 0 ? inputSubtasks.map(s => ({...s})) : null;
-  db.collection('teams').doc(currentTeam.id).collection('tasks').add({
-    text, description: desc || null, subtasks: subs,
+    db.collection('teams').doc(currentTeam.id).collection('tasks').add({
+      text: t.text, description: t.description || null,
       tag: t.tag || null, priority: t.priority || null,
       dueAt: firebase.firestore.Timestamp.fromDate(nextDate),
       assignee: t.assignee || null, recurDays: t.recurDays,
