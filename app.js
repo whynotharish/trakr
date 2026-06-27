@@ -59,6 +59,7 @@ let dragSrcId = null;
 let unsubTasks = null;
 let unsubTeam = null;
 let recurDaysInput = [];
+let inputSubtasks = [];
 let currentEditRecurDays = [];
 const systemDarkMQ = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -108,6 +109,9 @@ const inviteModal = $('inviteModal');
 const inviteModalContent = $('inviteModalContent');
 const repeatBtn = $('repeatBtn');
 const dayPicker = $('dayPicker');
+const descInput = $('descInput');
+const subtaskInput = $('subtaskInput');
+const inputSubtaskList = $('inputSubtaskList');
 const themeModeRow = $('themeModeRow');
 
 // ── UTILS ──
@@ -537,8 +541,10 @@ function handleToggle(id) {
   if (!t.done && t.recurDays && t.recurDays.length > 0) {
     const nextDate = getNextRecurDate(t.recurDays, t.dueAt);
     const maxPos = tasks.reduce((m, t) => Math.max(m, t.position || 0), 0);
-    db.collection('teams').doc(currentTeam.id).collection('tasks').add({
-      text: t.text, description: t.description || null,
+      const desc = descInput.value.trim();
+  const subs = inputSubtasks.length > 0 ? inputSubtasks.map(s => ({...s})) : null;
+  db.collection('teams').doc(currentTeam.id).collection('tasks').add({
+    text, description: desc || null, subtasks: subs,
       tag: t.tag || null, priority: t.priority || null,
       dueAt: firebase.firestore.Timestamp.fromDate(nextDate),
       assignee: t.assignee || null, recurDays: t.recurDays,
@@ -654,7 +660,8 @@ function addTask() {
     createdBy: currentUser.email, position: maxPos + 1,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
-  taskInput.value = ''; dueInput.value = ''; prioritySelect.value = ''; tagSelect.value = ''; assigneeSelect.value = '';
+    taskInput.value = ''; descInput.value = ''; descInput.style.height = 'auto'; dueInput.value = ''; prioritySelect.value = ''; tagSelect.value = ''; assigneeSelect.value = '';
+  inputSubtasks.length = 0; renderInputSubtasks(); subtaskInput.value = '';
   recurDaysInput.length = 0;
   repeatBtn.classList.remove('active');
   dayPicker.classList.remove('open');
@@ -667,6 +674,25 @@ taskInput.onkeydown = e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addTask(); }
 };
 taskInput.oninput = () => { taskInput.style.height = 'auto'; taskInput.style.height = taskInput.scrollHeight + 'px'; };
+descInput.oninput = () => { descInput.style.height = 'auto'; descInput.style.height = descInput.scrollHeight + 'px'; };
+
+function renderInputSubtasks() {
+  inputSubtaskList.innerHTML = '';
+  inputSubtasks.forEach((s, i) => {
+    const li = document.createElement('li');
+    li.className = 'subtask-item';
+    li.innerHTML = `<div class="subtask-check" onclick="inputSubtasks.splice(${i},1);renderInputSubtasks()"><svg viewBox="0 0 10 10" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg></div><span class="subtask-text">${esc(s.text)}</span>`;
+    inputSubtaskList.appendChild(li);
+  });
+}
+
+subtaskInput.onkeydown = e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const v = subtaskInput.value.trim();
+    if (v) { inputSubtasks.push({text: v, done: false}); subtaskInput.value = ''; renderInputSubtasks(); }
+  }
+};
 
 // ── LIST EVENTS ──
 taskList.addEventListener('click', e => {
