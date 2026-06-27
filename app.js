@@ -472,7 +472,7 @@ function renderList() {
     const mHTML = meta.length ? `<div class="task-meta">${meta.join('')}</div>` : '';
         const hasDetails = task.description || (task.subtasks && task.subtasks.length);
     const expandHTML = hasDetails ? `<div class="task-expand">${renderSubtasksHTML(task)}</div>` : '';
-        li.innerHTML = `<div class="drag-handle"><span></span><span></span><span></span></div><div class="checkbox" data-action="toggle"><svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2.5,6 5,8.5 9.5,3.5"/></svg></div><div class="task-content">
+            li.innerHTML = `<div class="drag-handle"><span></span><span></span><span></span></div><div class="checkbox" data-action="toggle"><svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2.5,6 5,8.5 9.5,3.5"/></svg></div><div class="task-content"><div class="task-name">${renderText(task.text)}</div>${mHTML}${expandHTML}</div><div class="task-actions"><button class="edit-btn" data-action="edit"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2-8 8H3.5v-2z"/><path d="M9.5 4.5l2 2"/></svg></button><button class="delete-btn" data-action="delete"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button></div>`;
     taskList.appendChild(li);
   });
 }
