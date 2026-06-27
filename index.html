@@ -88,7 +88,6 @@
   .invite-btn { font-size:11px; color:var(--accent); cursor:pointer; font-weight:600; background:none; border:none; font-family:var(--font-body); margin-left:6px; }
   .invite-btn:hover { text-decoration:underline; }
   .user-menu { display:flex; align-items:center; gap:6px; cursor:pointer; }
-  .user-av { width:24px; height:24px; border-radius:50%; object-fit:cover; }
   .signout-btn { font-size:11px; color:var(--text-muted); cursor:pointer; background:none; border:none; font-family:var(--font-body); display:flex; align-items:center; gap:4px; }
   .signout-btn:hover { color:var(--accent); }
 
@@ -107,7 +106,6 @@
   .theme-mode-btn:not(:last-child) { border-right:1.5px solid var(--border); }
   .theme-mode-btn:hover { color:var(--text); }
   .theme-mode-btn.active { background:var(--accent); color:white; }
-
 
   /* STATS */
   .stats-row { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
@@ -175,7 +173,7 @@
   .task-item.done .checkbox { background:var(--accent); border-color:var(--accent); }
   .checkbox svg { width:10px; height:10px; opacity:0; }
   .task-item.done .checkbox svg { opacity:1; }
-  .task-content { flex:1; min-width:0; }
+  .task-content { flex:1; min-width:0; cursor:pointer; }
   .task-name { font-size:14px; color:var(--text); line-height:1.4; }
   .task-name a, .k-card-name a { color:var(--accent); text-decoration:underline; text-underline-offset:2px; }
   .task-name a:hover, .k-card-name a:hover { text-decoration-thickness:2px; }
@@ -215,6 +213,8 @@
     margin-bottom:8px; background:transparent; resize:none; line-height:1.4;
   }
   .edit-form textarea:focus { border-bottom-color:var(--accent); }
+  .edit-form .edit-desc { font-size:12px; color:var(--text-muted); border-bottom-width:1px; }
+  .edit-form .edit-desc::placeholder { color:var(--text-muted); }
   .edit-form-options { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
   .edit-form-actions { display:flex; gap:5px; margin-left:auto; }
   .edit-save-btn { background:var(--accent); color:white; border:none; border-radius:6px; padding:4px 12px; font-size:11px; font-weight:600; cursor:pointer; font-family:var(--font-body); }
@@ -223,6 +223,37 @@
   .empty-state .icon { font-size:28px; margin-bottom:10px; opacity:0.4; }
   .clear-done-btn { background:none; border:none; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:var(--font-body); padding:4px 0; }
   .clear-done-btn:hover { color:var(--accent); }
+
+  /* TASK EXPAND — description + subtasks */
+  .task-expand { display:none; margin-top:8px; padding-top:8px; border-top:1px solid var(--border); cursor:default; }
+  .task-item.expanded .task-expand { display:block; }
+  .task-desc { font-size:12px; color:var(--text-muted); line-height:1.5; white-space:pre-wrap; margin-bottom:6px; }
+  .task-desc:empty { display:none; }
+  .task-desc a { color:var(--accent); }
+  .subtask-list { list-style:none; }
+  .subtask-item { display:flex; align-items:center; gap:6px; padding:3px 0; }
+  .subtask-check { width:14px; height:14px; border:1.5px solid var(--border); border-radius:3px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+  .subtask-check:hover { border-color:var(--accent); }
+  .subtask-check.done { background:var(--accent); border-color:var(--accent); }
+  .subtask-check svg { width:8px; height:8px; opacity:0; }
+  .subtask-check.done svg { opacity:1; }
+  .subtask-text { font-size:12px; color:var(--text); }
+  .subtask-item.done .subtask-text { text-decoration:line-through; color:var(--done-text); }
+  .subtask-add { display:flex; gap:6px; margin-top:4px; }
+  .subtask-add input { flex:1; border:none; border-bottom:1px solid var(--border); font-size:12px; font-family:var(--font-body); color:var(--text); outline:none; padding:3px 0; background:transparent; }
+  .subtask-add input:focus { border-bottom-color:var(--accent); }
+  .subtask-add input::placeholder { color:var(--text-muted); }
+  .subtask-count { font-size:9px; color:var(--text-muted); display:flex; align-items:center; gap:2px; }
+  .subtask-count svg { width:10px; height:10px; stroke:currentColor; fill:none; }
+
+  /* EDIT SUBTASKS */
+  .edit-subtask-list { list-style:none; margin-bottom:6px; }
+  .edit-subtask-item { display:flex; align-items:center; gap:6px; padding:3px 0; }
+  .edit-subtask-item input { flex:1; border:none; border-bottom:1px solid var(--border); font-size:12px; font-family:var(--font-body); color:var(--text); outline:none; padding:2px 0; background:transparent; }
+  .edit-subtask-item input:focus { border-bottom-color:var(--accent); }
+  .edit-subtask-remove { background:none; border:none; cursor:pointer; padding:2px; opacity:0.3; transition:opacity 0.15s; }
+  .edit-subtask-remove:hover { opacity:1; }
+  .edit-subtask-remove svg { width:10px; height:10px; stroke:var(--text-muted); }
 
   /* KANBAN */
   .kanban-view { display:none; } body.kanban-mode .kanban-view { display:block; }
@@ -311,7 +342,7 @@
               <div class="theme-panel-label">Background</div>
               <div class="theme-swatches" id="bgSwatches"></div>
               <div class="theme-panel-label">Appearance</div>
-                            <div class="theme-mode-row" id="themeModeRow">
+              <div class="theme-mode-row" id="themeModeRow">
                 <button class="theme-mode-btn" data-mode="light">Light</button>
                 <button class="theme-mode-btn" data-mode="auto">Auto</button>
                 <button class="theme-mode-btn" data-mode="dark">Dark</button>
