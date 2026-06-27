@@ -88,7 +88,6 @@ const activeCount = $('activeCount');
 const doneCount = $('doneCount');
 const overdueCount = $('overdueCount');
 const overduePill = $('overduePill');
-const clearDoneBtn = $('clearDoneBtn');
 const listLabel = $('listLabel');
 const dateDisplay = $('dateDisplay');
 const notifToggle = $('notifToggle');
@@ -427,7 +426,6 @@ function updateStats() {
   const a = tasks.filter(t => !t.done).length, d = tasks.filter(t => t.done).length, o = tasks.filter(t => isOverdue(t)).length;
   activeCount.textContent = a; doneCount.textContent = d; overdueCount.textContent = o;
   overduePill.style.display = o > 0 ? '' : 'none'; overduePill.classList.toggle('has-overdue', o > 0);
-  clearDoneBtn.style.display = d > 0 ? 'block' : 'none';
 }
 
 function getFiltered() {
@@ -485,7 +483,8 @@ function renderList() {
 function renderKanban() {
   kanbanBoard.innerHTML = '';
   [...tagKeys, null].forEach(tagKey => {
-    const colTasks = sortByDue(tasks.filter(t => (t.tag || null) === tagKey));
+        const colTasks = sortByDue(tasks.filter(t => (t.tag || null) === tagKey));
+    if (!colTasks.length) return;
     const label = tagKey ? tagLabelsMap[tagKey] : 'Untagged';
     const color = tagKey ? tagColors[tagKey] : '#8A8580';
     const col = document.createElement('div'); col.className = 'kanban-col'; col.dataset.tag = tagKey || '__none';
@@ -739,10 +738,5 @@ taskList.addEventListener('drop', e => {
 
 // ── FILTERS ──
 document.querySelectorAll('.filter-btn').forEach(b => b.onclick = () => { document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); currentFilter = b.dataset.filter; renderAll(); });
-clearDoneBtn.onclick = () => {
-  const batch = db.batch();
-  tasks.filter(t => t.done).forEach(t => batch.delete(db.collection('teams').doc(currentTeam.id).collection('tasks').doc(t.id)));
-  batch.commit();
-};
 
 setView(currentView);
