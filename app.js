@@ -16,7 +16,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 emailjs.init("2L633_2gZwN-qlCGv");
 const EMAILJS_SERVICE = "service_z74iz3g";
-const EMAILJS_TEMPLATE = "o8w7nw4";
+const EMAILJS_TEMPLATE = "template_cnbgmld";
 
 
 // ── CONSTANTS ──
