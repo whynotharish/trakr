@@ -60,7 +60,6 @@ let unsubTasks = null;
 let unsubTeam = null;
 let recurDaysInput = [];
 let currentEditRecurDays = [];
-let expandedTaskId = null;
 const systemDarkMQ = window.matchMedia('(prefers-color-scheme: dark)');
 
 function resolveIsDark() {
@@ -465,16 +464,15 @@ function renderList() {
 
   filtered.forEach(task => {
     const li = document.createElement('li');
-    const isExpanded = expandedTaskId === task.id;
-    li.className = 'task-item' + (task.done ? ' done' : '') + (isExpanded ? ' expanded' : '');
+        li.className = 'task-item' + (task.done ? ' done' : '');
     li.dataset.id = task.id; li.draggable = true;
     let meta = [dueMeta(task), prioMeta(task), assigneeMeta(task), recurMeta(task), subtaskMeta(task)];
     if (task.tag) meta.push(`<span class="task-tag ${task.tag}">${tagLabelsMap[task.tag] || task.tag}</span>`);
     meta = meta.filter(Boolean);
     const mHTML = meta.length ? `<div class="task-meta">${meta.join('')}</div>` : '';
-    const hasDetails = task.description || (task.subtasks && task.subtasks.length);
-    const expandHTML = `<div class="task-expand">${renderSubtasksHTML(task)}</div>`;
-    li.innerHTML = `<div class="drag-handle"><span></span><span></span><span></span></div><div class="checkbox" data-action="toggle"><svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2.5,6 5,8.5 9.5,3.5"/></svg></div><div class="task-content" data-action="expand"><div class="task-name">${renderText(task.text)}</div>${mHTML}${expandHTML}</div><div class="task-actions"><button class="edit-btn" data-action="edit"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2-8 8H3.5v-2z"/><path d="M9.5 4.5l2 2"/></svg></button><button class="delete-btn" data-action="delete"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg></button></div>`;
+        const hasDetails = task.description || (task.subtasks && task.subtasks.length);
+    const expandHTML = hasDetails ? `<div class="task-expand">${renderSubtasksHTML(task)}</div>` : '';
+        li.innerHTML = `<div class="drag-handle"><span></span><span></span><span></span></div><div class="checkbox" data-action="toggle"><svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polyline points="2.5,6 5,8.5 9.5,3.5"/></svg></div><div class="task-content">
     taskList.appendChild(li);
   });
 }
@@ -677,15 +675,9 @@ taskList.addEventListener('click', e => {
   const li = e.target.closest('.task-item'); if (!li) return;
   const id = li.dataset.id, action = item.dataset.action;
 
-  if (action === 'expand') {
-    if (li.classList.contains('editing')) return;
-    expandedTaskId = expandedTaskId === id ? null : id;
-    renderAll();
-    return;
-  }
   if (action === 'toggle') { handleToggle(id); }
   else if (action === 'delete') { li.classList.add('removing'); setTimeout(() => taskRef(id).delete(), 200); }
-  else if (action === 'edit') { expandedTaskId = null; startEdit(id); }
+  else if (action === 'edit') { startEdit(id); }
   else if (action === 'edit-save') { saveEdit(id, li, currentEditRecurDays); }
   else if (action === 'edit-delete') { li.classList.add('removing'); setTimeout(() => taskRef(id).delete(), 200); }
   else if (action === 'edit-cancel') renderAll();
