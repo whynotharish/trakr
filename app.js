@@ -659,6 +659,12 @@ function saveEdit(tid, li, editRecurDays) {
 // ── ADD TASK ──
 function addTask() {
   const text = taskInput.value.trim(); if (!text) return;
+  const description = descInput.value.trim();
+  const pendingSubtask = subtaskInput.value.trim();
+  const cleanSubtasks = [
+    ...inputSubtasks,
+    ...(pendingSubtask ? [{text: pendingSubtask, done: false}] : [])
+  ].filter(s => s.text.trim()).map(s => ({text: s.text.trim(), done: !!s.done}));
   const maxPos = tasks.reduce((m, t) => Math.max(m, t.position || 0), 0);
   const hasRecur = recurDaysInput.length > 0;
   let dueAt = null;
@@ -668,7 +674,9 @@ function addTask() {
     dueAt = firebase.firestore.Timestamp.fromDate(getNextRecurDate(recurDaysInput, null));
   }
   db.collection('teams').doc(currentTeam.id).collection('tasks').add({
-    text, description: null, subtasks: null,
+    text,
+    description: description || null,
+    subtasks: cleanSubtasks.length > 0 ? cleanSubtasks : null,
     tag: tagSelect.value || null, priority: prioritySelect.value || null,
     dueAt: dueAt,
     assignee: assigneeSelect.value || null, done: false,
