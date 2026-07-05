@@ -3,13 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#FFFFFF">
 <title>Trakr</title>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%232563EB'/></svg>">
 <style>
-  :root {
+  html { color-scheme: light; }
+html.dark { color-scheme: dark; }
+:root {
     --accent: #2563EB; --accent-hover: #1D4ED8;
     --bg: #FFFFFF; --card: #FFFFFF; --text: #111111; --text-muted: #767676;
     --border: #E5E5E5; --done-bg: #F5F5F5; --done-text: #A3A3A3; --input-bg: #FAFAFA;
