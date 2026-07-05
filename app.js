@@ -400,6 +400,87 @@ inviteTeamBtn.onclick = () => {
   `;
   inviteModal.classList.add('active');
   $('closeInvite').onclick = () => inviteModal.classList.remove('active');
+  $('copyCode').onclick = () => { navigator.clipboard.writeText(currentTeam.inviteCode).then(()      members: {
+        [currentUser.email]: {
+          name: currentUser.displayName,
+          avatar: currentUser.photoURL,
+          role: 'member'
+        }
+      }
+    }, { merge: true });
+    await db.collection('users').doc(currentUser.uid).update({ teamId: teamDoc.id });
+    loadTeam(teamDoc.id);
+  };
+
+  $('skipTeamBtn').onclick = async () => {
+    const firstName = currentUser.displayName.split(' ')[0];
+    const code = genCode();
+    const ref = await db.collection('teams').add({
+      name: `${firstName}'s Tasks`, inviteCode: code, createdBy: currentUser.uid, personal: true,
+      members: { [currentUser.email]: { name: currentUser.displayName, avatar: currentUser.photoURL, role: 'admin' } }
+    });
+    await db.collection('users').doc(currentUser.uid).update({ teamId: ref.id });
+    loadTeam(ref.id);
+  };
+}
+
+// ── LOAD TEAM ──
+function loadTeam(teamId) {
+  showView('app');
+  if (unsubTeam) unsubTeam();
+  unsubTeam = db.collection('teams').doc(teamId).onSnapshot(doc => {
+    if (!doc.exists) return;
+    currentTeam = { id: doc.id, ...doc.data() };
+    teamMembers = currentTeam.members || {};
+    teamNamePill.textContent = currentTeam.name;
+    renderMembers();
+    populateAssignees();
+  });
+
+  if (unsubTasks) unsubTasks();
+  unsubTasks = db.collection('teams').doc(teamId).collection('tasks').orderBy('position').onSnapshot(snap => {
+    tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+}
+
+function renderMembers() {
+  memberAvatars.innerHTML = '';
+  Object.entries(teamMembers).forEach(([email, m]) => {
+    if (m.avatar) {
+      const img = document.createElement('img');
+      img.className = 'member-av'; img.src = m.avatar; img.title = m.name;
+      memberAvatars.appendChild(img);
+    } else {
+      const div = document.createElement('div');
+      div.className = 'member-av'; div.textContent = m.name[0]; div.title = m.name;
+      memberAvatars.appendChild(div);
+    }
+  });
+}
+
+function populateAssignees() {
+  const cur = assigneeSelect.value;
+  assigneeSelect.innerHTML = '<option value="">Assign to</option>';
+  Object.entries(teamMembers).forEach(([email, m]) => {
+    const opt = document.createElement('option');
+    opt.value = email; opt.textContent = m.name;
+    assigneeSelect.appendChild(opt);
+  });
+  assigneeSelect.value = cur;
+}
+
+// ── INVITE MODAL ──
+inviteTeamBtn.onclick = () => {
+  inviteModalContent.innerHTML = `
+    <button class="modal-close" id="closeInvite">&times;</button>
+    <h3>Invite Teammates</h3>
+    <p>Share this code with your team</p>
+    <div class="invite-code-display" id="codeDisplay">${currentTeam.inviteCode}</div>
+    <div class="copy-hint" id="copyCode">Click to copy</div>
+  `;
+  inviteModal.classList.add('active');
+  $('closeInvite').onclick = () => inviteModal.classList.remove('active');
   $('copyCode').onclick = () => { navigator.clipboard.writeText(currentTeam.inviteCode).then(()});
 systemDarkMQ.addEventListener('change', () => { if (themeMode === 'auto') applyTheme(); });
 themeToggleBtn.onclick = e => { e.stopPropagation(); themePanel.classList.toggle('open'); panelOverlay.classList.toggle('open'); };
