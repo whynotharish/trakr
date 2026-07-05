@@ -187,13 +187,21 @@ function taskRef(id) { return db.collection('teams').doc(currentTeam.id).collect
 
 // ── SHOW VIEWS ──
 function showView(name) {
-  loadingView.style.display = 'none';
-  authView.classList.remove('active');
-  teamView.classList.remove('active');
-  appView.classList.remove('active');
-  if (name === 'auth') authView.classList.add('active');
-  else if (name === 'team') teamView.classList.add('active');
-  else if (name === 'app') appView.classList.add('active');
+  const finishSwitch = () => {
+    loadingView.style.display = 'none';
+    authView.classList.remove('active');
+    teamView.classList.remove('active');
+    appView.classList.remove('active');
+    if (name === 'auth') authView.classList.add('active');
+    else if (name === 'team') teamView.classList.add('active');
+    else if (name === 'app') appView.classList.add('active');
+  };
+  if (loadingView.style.display !== 'none') {
+    loadingView.classList.add('fade-out');
+    setTimeout(finishSwitch, 380);
+  } else {
+    finishSwitch();
+  }
 }
 
 // ── DATE ──
@@ -224,6 +232,175 @@ bgThemes.forEach(b => { const s = document.createElement('div'); s.className = '
 themeModeRow.querySelectorAll('.theme-mode-btn').forEach(btn => {
   btn.onclick = () => { themeMode = btn.dataset.mode; applyTheme(); };
 });
+systemDarkMQ.addEventListener('change', () => { if (themeMode === 'auto') applyTheme(); });
+themeToggleBtn.onclick = e => { e.stopPropagation(); themePanel.classList.toggle('open'); panelOverlay.classList.toggle('open'); };
+panelOverlay.onclick = () => { themePanel.classList.remove('open'); panelOverlay.classList.remove('open'); };
+applyTheme();
+
+// ── RECURRING INPUT ──
+function buildDayPicker(container, selectedDays, onChange) {
+  container.innerHTML = '';
+  recurDayKeys.forEach((key, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'day-toggle' + (selectedDays.includes(key) ? ' active' : '');
+    btn.textContent = recurDayLabels[i];
+    btn.onclick = () => {
+      const idx = selectedDays.indexOf(key);
+      if (idx > -1) selectedDays.splice(idx, 1); else selectedDays.push(key);
+      btn.classList.toggle('active', selectedDays.includes(key));
+      if (onChange) onChange(selectedDays);
+    };
+    container.appendChild(btn);
+  });
+}
+
+buildDayPicker(dayPicker, recurDaysInput);
+repeatBtn.onclick = () => {
+  const isActive = repeatBtn.classList.toggle('active');
+  dayPicker.classList.toggle('open', isActive);
+  if (!isActive) { recurDaysInput.length = 0; dayPicker.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active')); }
+};
+
+// ── AUTH ──
+$('googleSignIn').onclick = () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => showToast('Sign-in failed: ' + err.message));
+};
+signOutBtn.onclick = () => { if (unsubTasks) unsubTasks(); if (unsubTeam) unsubTeam(); auth.signOut(); };
+
+auth.onAuthStateChanged(async user => {
+  currentUser = user;
+  if (!user) { showView('auth'); return; }
+  const snap = await db.collection('users').doc(user.uid).get();
+  if (snap.exists && snap.data().teamId) {
+    loadTeam(snap.data().teamId);
+  } else {
+    await db.collection('users').doc(user.uid).set({ email: user.email, name: user.displayName, avatar: user.photoURL, teamId: null }, { merge: true });
+    showTeamSetup();
+  }
+});
+
+// ── TEAM SETUP ──
+function showTeamSetup() {
+  teamCard.innerHTML = `
+    <div class="logo">Trakr<span class="logo-dot"></span></div>
+    <p>Hey ${esc(currentUser.displayName.split(' ')[0])}! Create a team or join one.</p>
+    <h2>Create Team</h2>
+    <input class="team-input" id="newTeamName" placeholder="Team name (e.g. Marketing)">
+    <button class="team-btn" id="createTeamBtn">Create Team</button>
+    <div class="divider">or</div>
+    <h2>Join Team</h2>
+    <input class="team-input" id="joinCode" placeholder="Enter invite code">
+    <button class="team-btn secondary" id="joinTeamBtn">Join Team</button>
+    <div class="divider">or</div>
+    <button class="team-btn secondary" id="skipTeamBtn">Use individually</button>
+    <p style="font-size:11px;margin-bottom:0;margin-top:4px;">You can always invite others later</p>
+  `;
+  showView('team');
+  document.querySelector('.logo-dot').style.background = currentAccent.value;
+
+  $('createTeamBtn').onclick = async () => {
+    const name = $('newTeamName').value.trim();
+    if (!name) return showToast('Enter a team name');
+    const code = genCode();
+    const ref = await db.collection('teams').add({
+      name, inviteCode: code, createdBy: currentUser.uid,
+      members: { [currentUser.email]: { name: currentUser.displayName, avatar: currentUser.photoURL, role: 'admin' } }
+    });
+    await db.collection('users').doc(currentUser.uid).update({ teamId: ref.id });
+    loadTeam(ref.id);
+  };
+
+  $('joinTeamBtn').onclick = async () => {
+    const code = $('joinCode').value.trim().toUpperCase();
+    if (!code) return showToast('Enter an invite code');
+    const snap = await db.collection('teams').where('inviteCode', '==', code).get();
+    if (snap.empty) return showToast('Invalid invite code');
+    const teamDoc = snap.docs[0];
+    await teamDoc.ref.set({
+      members: {
+        [currentUser.email]: {
+          name: currentUser.displayName,
+          avatar: currentUser.photoURL,
+          role: 'member'
+        }
+      }
+    }, { merge: true });
+    await db.collection('users').doc(currentUser.uid).update({ teamId: teamDoc.id });
+    loadTeam(teamDoc.id);
+  };
+
+  $('skipTeamBtn').onclick = async () => {
+    const firstName = currentUser.displayName.split(' ')[0];
+    const code = genCode();
+    const ref = await db.collection('teams').add({
+      name: `${firstName}'s Tasks`, inviteCode: code, createdBy: currentUser.uid, personal: true,
+      members: { [currentUser.email]: { name: currentUser.displayName, avatar: currentUser.photoURL, role: 'admin' } }
+    });
+    await db.collection('users').doc(currentUser.uid).update({ teamId: ref.id });
+    loadTeam(ref.id);
+  };
+}
+
+// ── LOAD TEAM ──
+function loadTeam(teamId) {
+  showView('app');
+  if (unsubTeam) unsubTeam();
+  unsubTeam = db.collection('teams').doc(teamId).onSnapshot(doc => {
+    if (!doc.exists) return;
+    currentTeam = { id: doc.id, ...doc.data() };
+    teamMembers = currentTeam.members || {};
+    teamNamePill.textContent = currentTeam.name;
+    renderMembers();
+    populateAssignees();
+  });
+
+  if (unsubTasks) unsubTasks();
+  unsubTasks = db.collection('teams').doc(teamId).collection('tasks').orderBy('position').onSnapshot(snap => {
+    tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+}
+
+function renderMembers() {
+  memberAvatars.innerHTML = '';
+  Object.entries(teamMembers).forEach(([email, m]) => {
+    if (m.avatar) {
+      const img = document.createElement('img');
+      img.className = 'member-av'; img.src = m.avatar; img.title = m.name;
+      memberAvatars.appendChild(img);
+    } else {
+      const div = document.createElement('div');
+      div.className = 'member-av'; div.textContent = m.name[0]; div.title = m.name;
+      memberAvatars.appendChild(div);
+    }
+  });
+}
+
+function populateAssignees() {
+  const cur = assigneeSelect.value;
+  assigneeSelect.innerHTML = '<option value="">Assign to</option>';
+  Object.entries(teamMembers).forEach(([email, m]) => {
+    const opt = document.createElement('option');
+    opt.value = email; opt.textContent = m.name;
+    assigneeSelect.appendChild(opt);
+  });
+  assigneeSelect.value = cur;
+}
+
+// ── INVITE MODAL ──
+inviteTeamBtn.onclick = () => {
+  inviteModalContent.innerHTML = `
+    <button class="modal-close" id="closeInvite">&times;</button>
+    <h3>Invite Teammates</h3>
+    <p>Share this code with your team</p>
+    <div class="invite-code-display" id="codeDisplay">${currentTeam.inviteCode}</div>
+    <div class="copy-hint" id="copyCode">Click to copy</div>
+  `;
+  inviteModal.classList.add('active');
+  $('closeInvite').onclick = () => inviteModal.classList.remove('active');
+  $('copyCode').onclick = () => { navigator.clipboard.writeText(currentTeam.inviteCode).then(()});
 systemDarkMQ.addEventListener('change', () => { if (themeMode === 'auto') applyTheme(); });
 themeToggleBtn.onclick = e => { e.stopPropagation(); themePanel.classList.toggle('open'); panelOverlay.classList.toggle('open'); };
 panelOverlay.onclick = () => { themePanel.classList.remove('open'); panelOverlay.classList.remove('open'); };
