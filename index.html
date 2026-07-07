@@ -12,10 +12,10 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%232563EB'/></svg>">
 <style>
   html { color-scheme: light; }
-html.dark { color-scheme: dark; }
+html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
 :root {
     --accent: #2563EB; --accent-hover: #1D4ED8;
-    --bg: #FFFFFF; --card: #FFFFFF; --text: #111111; --text-muted: #767676;
+    --bg: #FFFFFF; --bg-top: #FAFBFF; --card: #FFFFFF; --text: #111111; --text-muted: #767676;
     --border: #E5E5E5; --done-bg: #F5F5F5; --done-text: #A3A3A3; --input-bg: #FAFAFA;
     --tag-wondermart: #7C3AED; --tag-merch: #2563EB; --tag-whatsapp: #25D366;
     --tag-comms: #0891B2; --tag-sql: #6366F1; --tag-personal: #EA580C; --tag-qc: #0D9488;
@@ -29,7 +29,7 @@ html.dark { color-scheme: dark; }
   }
   html.dark { --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15); --p0-bg:#2D1515; --p1-bg:#2D2815; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:linear-gradient(180deg, #FAFBFF 0%, var(--bg) 280px); color:var(--text); font-family:var(--font-body); min-height:100vh; transition:background 0.3s,color 0.3s; }
+  body { background:linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 280px); color:var(--text); font-family:var(--font-body); min-height:100vh; transition:background 0.3s,color 0.3s; }
 
   /* AUTH SCREEN */
   .auth-view, .team-view { display:none; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
