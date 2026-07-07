@@ -212,7 +212,7 @@ function applyTheme() {
   r.setProperty('--accent', currentAccent.value);
   r.setProperty('--accent-hover', currentAccent.hover);
   const p = isDark ? currentBg.dark : currentBg.light;
-  r.setProperty('--bg', p.bg); r.setProperty('--card', p.card); r.setProperty('--border', p.border);
+  r.setProperty('--bg', p.bg); r.setProperty('--bg-top', p.bg); r.setProperty('--card', p.card); r.setProperty('--border', p.border);
   r.setProperty('--done-bg', p.doneBg); r.setProperty('--done-text', p.doneTxt);
   r.setProperty('--input-bg', p.inputBg); r.setProperty('--text-muted', p.txtMuted); r.setProperty('--text', p.txt);
   document.querySelectorAll('.logo-dot').forEach(d => d.style.background = currentAccent.value);
