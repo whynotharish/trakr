@@ -16,7 +16,7 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
 }
 html.dark { --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15); --p0-bg:#2D1515; --p1-bg:#2D2815; }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { background:var(--bg); color:var(--text); font-family:var(--font-body); min-height:100vh; transition:background 0.3s,color 0.3s; }
+body { background:linear-gradient(180deg, var(--bg-top), var(--bg)); background-attachment:fixed; color:var(--text); font-family:var(--font-body); min-height:100vh; transition:background 0.3s,color 0.3s; }
 
 /* AUTH SCREEN */
 .auth-view, .team-view { display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
@@ -112,13 +112,31 @@ header { margin-bottom:36px; }
 .stat-pill strong { color:var(--text); font-weight:600; }
 .stat-pill.has-overdue strong { color:var(--overdue); }
 
-/* INPUT */
+/* INPUT — glass + glow */
 .input-area {
-  background:var(--card);
-  border:1.5px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:28px;
+  position:relative;
+  background:color-mix(in srgb, var(--card) 60%, transparent);
+  backdrop-filter:blur(20px) saturate(160%);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);
+  border:1.5px solid color-mix(in srgb, var(--card) 50%, transparent);
+  border-radius:var(--radius); padding:18px; margin-bottom:28px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.06);
   transition:border-color 0.2s;
+  z-index:0;
 }
-.input-area:focus-within { border-color:var(--accent); }
+.input-area::before {
+  content:''; position:absolute; inset:-2px; border-radius:inherit; padding:2px;
+  background:conic-gradient(from 0deg, var(--accent), #7C3AED, #25D366, #0891B2, var(--accent));
+  filter:blur(8px); opacity:0.5; z-index:-1;
+  animation:glowSpin 5s linear infinite;
+}
+@keyframes glowSpin { to { transform:rotate(360deg); } }
+.input-area:focus-within { border-color:color-mix(in srgb, var(--card) 65%, transparent); }
+.input-area:focus-within::before { opacity:0.9; filter:blur(12px); }
+html.dark .input-area { box-shadow:0 8px 32px rgba(0,0,0,0.3); }
+@media (prefers-reduced-motion: reduce) {
+  .input-area::before { animation:none; }
+}
 body.kanban-mode .input-area { max-width:640px; }
 .input-main { display:flex; gap:8px; margin-bottom:8px; }
 .input-main textarea {
