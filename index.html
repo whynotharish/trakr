@@ -110,7 +110,7 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
 
   /* THEME PANEL */
   .theme-panel-wrap { position:relative; }
-  .theme-panel { position:absolute; top:36px; right:0; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; box-shadow:0 8px 32px rgba(0,0,0,0.12); z-index:200; width:220px; display:none; opacity:0; transform:translateY(-6px) scale(0.97); transition:opacity 0.18s,transform 0.18s; }
+  .theme-panel { position:absolute; top:42px; right:0; background:var(--card); border:1px solid var(--border); border-radius:18px; padding:18px; box-shadow:0 22px 70px rgba(15,23,42,0.18); z-index:1001; width:260px; display:none; opacity:0; transform:translateY(-6px) scale(0.97); transition:opacity 0.18s,transform 0.18s; }
   .theme-panel.open { display:block; opacity:1; transform:translateY(0) scale(1); }
   .theme-panel-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:10px; }
   .theme-swatches { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
@@ -153,7 +153,7 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
   .opt-datetime:focus { border-color:var(--accent); }
   html.dark .opt-datetime::-webkit-calendar-picker-indicator { filter:invert(1); }
   .input-options .spacer { flex:1; }
-  .add-btn { background:linear-gradient(180deg, #3B82F6, var(--accent)); color:white; border:none; border-radius:8px; padding:6px 16px; font-size:12px; font-weight:600; cursor:pointer; transition:filter 0.15s,transform 0.1s; font-family:var(--font-body); box-shadow:0 2px 8px rgba(37,99,235,0.25); }
+  .add-btn { background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, white), var(--accent)); color:white; border:none; border-radius:10px; padding:7px 18px; font-size:12px; font-weight:700; cursor:pointer; transition:filter 0.15s,transform 0.1s; font-family:var(--font-body); box-shadow:0 10px 22px color-mix(in srgb, var(--accent) 24%, transparent); }
   .add-btn:hover { filter:brightness(1.08); }
   .add-btn:active { transform:scale(0.97); }
   .input-desc {
@@ -334,7 +334,7 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
 
   .toast { position:fixed; bottom:64px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:var(--bg); padding:9px 18px; border-radius:8px; font-size:12px; opacity:0; transition:opacity 0.3s,transform 0.3s; pointer-events:none; z-index:400; max-width:90%; text-align:center; }
   .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-  .panel-overlay { position:fixed; inset:0; z-index:199; display:none; }
+  .panel-overlay { position:fixed; inset:0; z-index:250; display:none; }
   .panel-overlay.open { display:block; }
   .loading {
     display:flex; flex-direction:column; justify-content:center; align-items:center;
