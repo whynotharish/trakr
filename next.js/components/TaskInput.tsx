@@ -80,7 +80,8 @@ export default function TaskInput({ team, user, tasks }: { team: Team; user: Use
     });
   };
 
-  return (
+    return (
+    <div className="glow-wrap">
     <div className="input-area">
       <div className="input-main">
         <textarea
@@ -202,7 +203,8 @@ export default function TaskInput({ team, user, tasks }: { team: Team; user: Use
             {recurDayLabels[i]}
           </button>
         ))}
-      </div>
+            </div>
+    </div>
     </div>
   );
 }
