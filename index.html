@@ -14,27 +14,28 @@
   html { color-scheme: light; }
 html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
 :root {
-    --accent: #2563EB; --accent-hover: #1D4ED8;
-    --bg: #FFFFFF; --bg-top: #FAFBFF; --card: #FFFFFF; --text: #111111; --text-muted: #767676;
-    --border: #E5E5E5; --done-bg: #F5F5F5; --done-text: #A3A3A3; --input-bg: #FAFAFA;
+    --accent: #2563EB; --accent-hover: #1D4ED8; --accent-soft: rgba(37,99,235,0.12);
+    --bg: #F7F8FC; --bg-top: #EEF4FF; --card: rgba(255,255,255,0.82); --text: #111827; --text-muted: #667085;
+    --border: rgba(148,163,184,0.34); --done-bg: rgba(241,245,249,0.76); --done-text: #94A3B8; --input-bg: rgba(248,250,252,0.74);
     --tag-wondermart: #7C3AED; --tag-merch: #2563EB; --tag-whatsapp: #25D366;
     --tag-comms: #0891B2; --tag-sql: #6366F1; --tag-personal: #EA580C; --tag-qc: #0D9488;
     --p0: #DC2626; --p0-bg: #FEF2F2; --p1: #D97706; --p1-bg: #FFFBEB;
     --overdue: #DC2626;
-    --shadow: 0 1px 2px rgba(0,0,0,0.03), 0 6px 16px rgba(0,0,0,0.04);
-    --shadow-hover: 0 2px 4px rgba(0,0,0,0.04), 0 10px 24px rgba(0,0,0,0.06);
-    --radius: 10px;
-    --font-display: 'Georgia', 'Times New Roman', serif;
+    --shadow: 0 18px 50px rgba(15,23,42,0.08), 0 1px 0 rgba(255,255,255,0.75) inset;
+    --shadow-hover: 0 24px 70px rgba(15,23,42,0.14), 0 1px 0 rgba(255,255,255,0.8) inset;
+    --radius: 18px;
+    --font-display: ui-sans-serif, -apple-system, 'Segoe UI', sans-serif;
     --font-body: -apple-system, 'Segoe UI', sans-serif;
   }
-  html.dark { --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15); --p0-bg:#2D1515; --p1-bg:#2D2815; }
+  html.dark { --shadow: 0 18px 50px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.05) inset; --shadow-hover: 0 28px 80px rgba(0,0,0,0.48), 0 1px 0 rgba(255,255,255,0.07) inset; --p0-bg:#2D1515; --p1-bg:#2D2815; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 280px); color:var(--text); font-family:var(--font-body); min-height:100vh; transition:background 0.3s,color 0.3s; }
+  body { background:radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 18%, transparent), transparent 32rem), linear-gradient(135deg, var(--bg-top) 0%, var(--bg) 46%, color-mix(in srgb, var(--accent) 7%, var(--bg)) 100%); color:var(--text); font-family:var(--font-body); min-height:100vh; transition:background 0.3s,color 0.3s; }
+  body::before { content:''; position:fixed; inset:0; pointer-events:none; background-image:linear-gradient(rgba(255,255,255,0.42) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.42) 1px, transparent 1px); background-size:48px 48px; mask-image:linear-gradient(to bottom, rgba(0,0,0,0.55), transparent 56%); }
 
   /* AUTH SCREEN */
   .auth-view, .team-view { display:none; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
   .auth-view.active, .team-view.active { display:flex; }
-  .app-view { display:none; padding:28px 20px 80px; }
+  .app-view { display:none; padding:34px 22px 88px; position:relative; }
   .app-view.active { display:block; }
   .auth-card, .team-card {
     background:linear-gradient(180deg, rgba(255,255,255,0.95), var(--card));
@@ -75,11 +76,11 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
   .copy-hint:hover { color:var(--accent); }
 
   /* HEADER */
-  .container { max-width:640px; margin:0 auto; transition:max-width 0.3s; }
-  body.kanban-mode .container { max-width:100%; }
-  header { margin-bottom:28px; }
+  .container { max-width:760px; margin:0 auto; transition:max-width 0.3s; position:relative; }
+  body.kanban-mode .container { max-width:1180px; }
+  header { margin-bottom:24px; padding:18px 20px; border:1px solid var(--border); border-radius:24px; background:linear-gradient(135deg, color-mix(in srgb, var(--card) 88%, transparent), color-mix(in srgb, var(--accent) 7%, var(--card))); backdrop-filter:blur(18px); box-shadow:var(--shadow); }
   .logo-row { display:flex; align-items:center; gap:10px; }
-  .logo { font-family:var(--font-display); font-size:27px; font-weight:700; letter-spacing:-0.6px; }
+  .logo { font-family:var(--font-display); font-size:30px; font-weight:850; letter-spacing:-1.2px; }
   .logo-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent); transition:background 0.3s; }
   .sub-row { display:flex; align-items:center; justify-content:space-between; margin-top:6px; gap:8px; }
   .date-text { font-size:13px; color:var(--text-muted); }
@@ -90,7 +91,7 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
   .hdr-btn svg { width:14px; height:14px; }
 
   /* USER & TEAM BAR */
-  .team-bar { display:flex; align-items:center; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .team-bar { display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; padding:10px; border:1px solid var(--border); border-radius:20px; background:color-mix(in srgb, var(--card) 70%, transparent); backdrop-filter:blur(14px); box-shadow:var(--shadow); }
   .team-name-pill { font-size:12px; font-weight:700; color:var(--text); background:var(--card); border:1px solid var(--border); border-radius:20px; padding:5px 14px; box-shadow:var(--shadow); }
   .member-avatars { display:flex; margin-left:auto; }
   .member-av { width:28px; height:28px; border-radius:50%; border:2px solid var(--bg); margin-left:-8px; cursor:pointer; object-fit:cover; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text-muted); }
@@ -124,16 +125,16 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
   .theme-mode-btn.active { background:var(--accent); color:white; }
 
   /* STATS */
-  .stats-row { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
-  .stat-pill { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; color:var(--text-muted); box-shadow:var(--shadow); }
-  .stat-pill strong { color:var(--text); font-weight:600; }
+  .stats-row { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; margin-bottom:20px; }
+  .stat-pill { background:linear-gradient(135deg, var(--card), color-mix(in srgb, var(--accent) 5%, var(--card))); border:1px solid var(--border); border-radius:18px; padding:14px 16px; font-size:12px; color:var(--text-muted); box-shadow:var(--shadow); }
+  .stat-pill strong { color:var(--text); font-weight:850; font-size:22px; display:block; line-height:1; margin-bottom:4px; }
   .stat-pill.has-overdue strong { color:var(--overdue); }
 
   /* INPUT */
   .input-area {
     background:linear-gradient(180deg, rgba(255,255,255,0.9), var(--card));
     backdrop-filter:blur(8px);
-    border:1.5px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:20px;
+    border:1.5px solid var(--border); border-radius:24px; padding:18px; margin-bottom:22px;
     box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,0.6);
     transition:border-color 0.2s, box-shadow 0.2s;
   }
@@ -180,13 +181,13 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
 
   /* LIST */
   .list-view {} body.kanban-mode .list-view { display:none; }
-  .filter-row { display:flex; gap:5px; margin-bottom:16px; flex-wrap:wrap; }
-  .filter-btn { background:none; border:1.5px solid var(--border); border-radius:20px; padding:4px 12px; font-size:11px; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all 0.15s; font-family:var(--font-body); }
+  .filter-row { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; padding:6px; border:1px solid var(--border); border-radius:22px; background:color-mix(in srgb, var(--card) 65%, transparent); backdrop-filter:blur(12px); }
+  .filter-btn { background:transparent; border:1.5px solid transparent; border-radius:16px; padding:7px 13px; font-size:11px; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all 0.15s; font-family:var(--font-body); }
   .filter-btn:hover { border-color:var(--accent); color:var(--accent); }
   .filter-btn.active { background:var(--accent); border-color:var(--accent); color:white; }
   .section-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-muted); margin-bottom:8px; }
   .task-list { list-style:none; margin-bottom:24px; min-height:20px; }
-  .task-item { background:linear-gradient(180deg, rgba(255,255,255,0.7), var(--card)); border:1px solid var(--border); border-radius:var(--radius); padding:11px 12px; margin-bottom:6px; display:flex; align-items:flex-start; gap:9px; box-shadow:var(--shadow); transition:opacity 0.2s,transform 0.2s,box-shadow 0.2s; animation:slideIn 0.3s cubic-bezier(0.16,1,0.3,1); cursor:grab; user-select:none; }
+  .task-item { background:linear-gradient(135deg, color-mix(in srgb, var(--card) 92%, transparent), color-mix(in srgb, var(--accent) 4%, var(--card))); backdrop-filter:blur(16px); border:1px solid var(--border); border-radius:20px; padding:14px 15px; margin-bottom:10px; display:flex; align-items:flex-start; gap:9px; box-shadow:var(--shadow); transition:opacity 0.2s,transform 0.2s,box-shadow 0.2s; animation:slideIn 0.3s cubic-bezier(0.16,1,0.3,1); cursor:grab; user-select:none; }
   .task-item:hover { box-shadow:var(--shadow-hover); transform:translateY(-1px); }
   .task-item:active { cursor:grabbing; }
   @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
@@ -292,7 +293,7 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
   /* KANBAN */
   .kanban-view { display:none; } body.kanban-mode .kanban-view { display:block; }
   .kanban-board { display:flex; gap:14px; overflow-x:auto; padding-bottom:16px; align-items:flex-start; }
-  .kanban-col { min-width:240px; max-width:280px; flex-shrink:0; background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); }
+  .kanban-col { min-width:270px; max-width:310px; flex-shrink:0; background:color-mix(in srgb, var(--card) 78%, transparent); backdrop-filter:blur(16px); border:1px solid var(--border); border-radius:22px; box-shadow:var(--shadow); overflow:hidden; }
   .kanban-col-header { padding:12px 14px 8px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
   .kanban-col-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; }
   .kanban-col-count { font-size:10px; color:var(--text-muted); background:var(--bg); padding:2px 7px; border-radius:10px; font-weight:600; }
@@ -301,7 +302,7 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
   .kanban-cards { padding:6px; min-height:50px; list-style:none; transition:background 0.15s; }
   .kanban-cards.drag-over-col { background:rgba(0,0,0,0.03); border-radius:0 0 12px 12px; }
   html.dark .kanban-cards.drag-over-col { background:rgba(255,255,255,0.03); }
-  .kanban-card { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:9px 10px; margin-bottom:5px; cursor:grab; user-select:none; transition:box-shadow 0.15s; }
+  .kanban-card { background:linear-gradient(135deg, var(--card), color-mix(in srgb, var(--accent) 4%, var(--card))); border:1px solid var(--border); border-radius:16px; padding:12px; margin-bottom:8px; cursor:grab; user-select:none; transition:box-shadow 0.15s; }
   .kanban-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.06); }
   .kanban-card.dragging { opacity:0.4; }
   .kanban-card.drag-over { border-top:2.5px solid var(--accent); }
@@ -356,6 +357,22 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
   /* PAGE-LEVEL FADE TRANSITIONS */
   .auth-view, .team-view, .app-view { animation:viewFadeIn 0.35s ease-out; }
   @keyframes viewFadeIn { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
+
+
+  @supports not (background: color-mix(in srgb, white, black)) {
+    body { background:linear-gradient(135deg, var(--bg-top), var(--bg)); }
+    header, .input-area, .task-item, .stat-pill, .kanban-card { background:var(--card); }
+  }
+  @media (max-width: 680px) {
+    .app-view { padding:18px 12px 72px; }
+    header { padding:16px; border-radius:22px; }
+    .sub-row { align-items:flex-start; flex-direction:column; }
+    .header-actions { width:100%; flex-wrap:wrap; }
+    .stats-row { grid-template-columns:1fr; }
+    .input-options { gap:8px; }
+    .opt-select, .opt-datetime, .repeat-btn { flex:1 1 42%; }
+    .add-btn { flex:1 1 100%; padding:10px 16px; }
+  }
 </style>
 </head>
 <body>
