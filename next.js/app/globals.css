@@ -112,11 +112,11 @@ header { margin-bottom:36px; }
 .stat-pill strong { color:var(--text); font-weight:600; }
 .stat-pill.has-overdue strong { color:var(--overdue); }
 
-/* INPUT — glass card + brief edge glow on each hover */
+/* INPUT — glass card + brief accent edge glow on hover */
 .glow-wrap {
   position:relative;
   border-radius:calc(var(--radius) + 2px);
-  padding:2px;                       /* rim thickness */
+  padding:2px;
   margin-bottom:28px;
   overflow:hidden;
   isolation:isolate;
@@ -130,18 +130,18 @@ body.kanban-mode .glow-wrap { max-width:640px; }
   translate:-50% -50%;
   background:conic-gradient(from 0deg,
     transparent 0deg,
-    var(--accent) 50deg,
-    #EEF1F5 90deg,
-    transparent 160deg,
-    transparent 200deg,
-    var(--accent) 250deg,
-    #EEF1F5 290deg,
+    var(--accent) 60deg,
+    color-mix(in srgb, var(--accent) 55%, #fff) 90deg,
+    var(--accent) 120deg,
+    transparent 180deg,
+    transparent 240deg,
+    var(--accent) 290deg,
     transparent 360deg);
   opacity:0;
   z-index:0;
 }
 .glow-wrap:hover::before {
-  animation:glowSweep 4s linear 1;   /* one-shot on each hover */
+  animation:glowSweep 4s linear 1;
 }
 @keyframes glowSweep {
   0%   { opacity:0; rotate:0deg; }
@@ -156,13 +156,29 @@ body.kanban-mode .glow-wrap { max-width:640px; }
 .input-area {
   position:relative;
   z-index:1;
-  background:var(--card);            /* opaque = no glow inside the card */
+  background:var(--card);
   border:none;
   border-radius:var(--radius);
   padding:18px;
   box-shadow:0 8px 32px rgba(0,0,0,0.06);
 }
 html.dark .input-area { box-shadow:0 8px 32px rgba(0,0,0,0.3); }
+
+.input-main { display:flex; gap:8px; margin-bottom:8px; }
+.input-main textarea {
+  flex:1; border:none; font-size:15px; font-family:var(--font-body); color:var(--text);
+  outline:none; background:transparent; resize:none; line-height:1.4; min-height:22px;
+}
+.input-main textarea::placeholder { color:var(--text-muted); }
+.input-desc {
+  width:100%; border:none; border-top:1px solid var(--border); font-size:12px;
+  font-family:var(--font-body); color:var(--text-muted); outline:none; padding:6px 0 4px;
+  background:transparent; resize:none; line-height:1.4; min-height:20px;
+}
+.input-desc:focus { color:var(--text); }
+.input-desc::placeholder { color:var(--text-muted); }
+.input-area .subtask-list { margin-bottom:4px; }
+.input-area .subtask-add { margin-bottom:8px; }
 
 /* RECURRING */
 .repeat-btn { display:flex; align-items:center; gap:4px; background:var(--input-bg); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:11px; font-family:var(--font-body); color:var(--text-muted); cursor:pointer; transition:all 0.15s; }
