@@ -112,48 +112,53 @@ header { margin-bottom:36px; }
 .stat-pill strong { color:var(--text); font-weight:600; }
 .stat-pill.has-overdue strong { color:var(--overdue); }
 
-/* INPUT — glass + silver glow ring */
-.input-area {
+/* INPUT — glass card + Dia-style rotating glow */
+.glow-wrap {
   position:relative;
-  background:color-mix(in srgb, var(--card) 60%, transparent);
-  backdrop-filter:blur(20px) saturate(160%);
-  -webkit-backdrop-filter:blur(20px) saturate(160%);
-  border:1.5px solid color-mix(in srgb, var(--card) 50%, transparent);
-  border-radius:var(--radius); padding:18px; margin-bottom:28px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.06);
-  transition:border-color 0.2s;
+  border-radius:calc(var(--radius) + 2px);
+  padding:2px;                       /* glow ring thickness */
+  margin-bottom:28px;
+  overflow:hidden;                   /* clips the spinning glow */
   isolation:isolate;
 }
-.input-area::before {
-  content:''; position:absolute; inset:0; border-radius:inherit;
-  padding:1.5px;                     /* ring thickness */
-  background:conic-gradient(from var(--glow-angle, 0deg),
-    #C8CDD6, #EEF1F5, #9AA3B2, #E6E9EF, #B5BCC9, #C8CDD6);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite:exclude;
-  animation:glowSpin 6s linear infinite;
-  pointer-events:none;
+body.kanban-mode .glow-wrap { max-width:640px; }
+.glow-wrap::before {
+  content:'';
+  position:absolute;
+  top:50%; left:50%;
+  width:200%; height:200%;
+  translate:-50% -50%;
+  background:conic-gradient(from 0deg,
+    transparent 0deg,
+    var(--accent) 50deg,
+    #EEF1F5 90deg,
+    transparent 160deg,
+    transparent 200deg,
+    var(--accent) 250deg,
+    #EEF1F5 290deg,
+    transparent 360deg);
+  animation:glowSpin 4s linear infinite;
+  z-index:0;
 }
-@property --glow-angle {
-  syntax:'<angle>'; inherits:false; initial-value:0deg;
+@keyframes glowSpin { to { rotate:360deg; } }
+.glow-wrap:focus-within::before { animation-duration:2.2s; }
+@media (prefers-reduced-motion: reduce) {
+  .glow-wrap::before { animation:none; }
 }
-@keyframes glowSpin {
-  to { --glow-angle:360deg; }
-}
-.input-area:focus-within::before {
-  background:conic-gradient(from var(--glow-angle, 0deg),
-    var(--accent), #EEF1F5, #C8CDD6, var(--accent));
+
+.input-area {
+  position:relative;
+  z-index:1;                         /* sits above the glow */
+  background:color-mix(in srgb, var(--card) 62%, transparent);
+  backdrop-filter:blur(20px) saturate(160%);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);
+  border:none;
+  border-radius:var(--radius);
+  padding:18px;
+  transition:box-shadow 0.2s;
+  box-shadow:0 8px 32px rgba(0,0,0,0.06);
 }
 html.dark .input-area { box-shadow:0 8px 32px rgba(0,0,0,0.3); }
-@media (prefers-reduced-motion: reduce) {
-  .input-area::before { animation:none; }
-}
 
 /* RECURRING */
 .repeat-btn { display:flex; align-items:center; gap:4px; background:var(--input-bg); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:11px; font-family:var(--font-body); color:var(--text-muted); cursor:pointer; transition:all 0.15s; }
