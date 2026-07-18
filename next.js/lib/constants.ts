@@ -33,9 +33,13 @@ export const accentColors: AccentColor[] = [
   { name: "Blue", value: "#2563EB", hover: "#1D4ED8" },
   { name: "Indigo", value: "#4F46E5", hover: "#4338CA" },
   { name: "Violet", value: "#7C3AED", hover: "#6D28D9" },
-  { name: "Emerald", value: "#10B981", hover: "#059669" },
+  { name: "Fuchsia", value: "#C026D3", hover: "#A21CAF" },
+  { name: "Rose", value: "#E11D48", hover: "#BE123C" },
+  { name: "Orange", value: "#EA580C", hover: "#C2410C" },
   { name: "Amber", value: "#F59E0B", hover: "#D97706" },
+  { name: "Emerald", value: "#10B981", hover: "#059669" },
   { name: "Teal", value: "#0D9488", hover: "#0F766E" },
+  { name: "Cyan", value: "#0891B2", hover: "#0E7490" },
 ];
 
 export interface BgPalette {
@@ -61,6 +65,9 @@ export const bgThemes: BgTheme[] = [
   { name: "Sage", swatch: "#F0F5F0", light: { bg: "#F0F5F0", card: "#FFFFFF", border: "#D4E4D4", doneBg: "#E6EFE6", doneTxt: "#8AAD8A", inputBg: "#F0F5F0", txtMuted: "#6B8A6B", txt: "#1A3A1A" }, dark: { bg: "#0F1A12", card: "#1A2E1E", border: "#254030", doneBg: "#121E15", doneTxt: "#3A5540", inputBg: "#121E15", txtMuted: "#5A7A60", txt: "#D0E5D5" } },
   { name: "Rose", swatch: "#FFF1F2", light: { bg: "#FFF1F2", card: "#FFFFFF", border: "#FFE4E6", doneBg: "#FEECED", doneTxt: "#D4A0A5", inputBg: "#FFF1F2", txtMuted: "#9B6B70", txt: "#4A1520" }, dark: { bg: "#1A0F10", card: "#2E1A1C", border: "#4A2830", doneBg: "#1E1215", doneTxt: "#5A3540", inputBg: "#1E1215", txtMuted: "#8A5A60", txt: "#F0D5D8" } },
   { name: "Sand", swatch: "#F5F0E8", light: { bg: "#F5F0E8", card: "#FFFFFF", border: "#E5DDD0", doneBg: "#EDE6DB", doneTxt: "#B5A890", inputBg: "#F5F0E8", txtMuted: "#8A7E6A", txt: "#3A3020" }, dark: { bg: "#1A1710", card: "#2E2A20", border: "#453E30", doneBg: "#1E1B15", doneTxt: "#554E3E", inputBg: "#1E1B15", txtMuted: "#7A7260", txt: "#E8DFD0" } },
+  { name: "Lavender", swatch: "#F5F3FF", light: { bg: "#F5F3FF", card: "#FFFFFF", border: "#E4E0FB", doneBg: "#EEEBFB", doneTxt: "#A9A0D4", inputBg: "#F5F3FF", txtMuted: "#7A6F9B", txt: "#2E2150" }, dark: { bg: "#131022", card: "#1F1A33", border: "#332B50", doneBg: "#171326", doneTxt: "#453D66", inputBg: "#171326", txtMuted: "#7268A0", txt: "#DED5F0" } },
+  { name: "Mint", swatch: "#ECFDF5", light: { bg: "#ECFDF5", card: "#FFFFFF", border: "#D1FAE5", doneBg: "#E1F7EC", doneTxt: "#8FCBB0", inputBg: "#ECFDF5", txtMuted: "#5F8A76", txt: "#12362A" }, dark: { bg: "#0B1A14", card: "#132E22", border: "#1E4535", doneBg: "#0F211A", doneTxt: "#35564A", inputBg: "#0F211A", txtMuted: "#5A8070", txt: "#D0EDE0" } },
+  { name: "Slate", swatch: "#F1F5F9", light: { bg: "#F1F5F9", card: "#FFFFFF", border: "#E2E8F0", doneBg: "#EAEEF3", doneTxt: "#A0AAB8", inputBg: "#F1F5F9", txtMuted: "#64748B", txt: "#1E293B" }, dark: { bg: "#0D1117", card: "#161B22", border: "#2A3038", doneBg: "#12161C", doneTxt: "#404853", inputBg: "#12161C", txtMuted: "#6B7685", txt: "#DDE3EA" } },
 ];
 
 export const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
