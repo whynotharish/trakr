@@ -15,6 +15,8 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
   --font-body: -apple-system, 'Segoe UI', sans-serif;
 }
 html.dark { --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15); --p0-bg:#2D1515; --p1-bg:#2D2815; }
+html.dark .task-item, html.dark .input-area { background: linear-gradient(180deg, rgba(255,255,255,0.04), var(--card)); }
+html.dark .team-name-pill, html.dark .stat-pill { box-shadow: none; }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 280px); color:var(--text); font-family:var(--font-body); min-height:100vh; transition:background 0.3s,color 0.3s; }
 
