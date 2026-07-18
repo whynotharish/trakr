@@ -140,9 +140,7 @@ body.kanban-mode .glow-wrap { max-width:640px; }
   opacity:0;
   z-index:0;
 }
-.glow-wrap:hover::before {
-  animation:glowSweep 4s linear 1;
-}
+.glow-wrap:hover::before { animation:glowSweep 4s linear 1; }
 @keyframes glowSweep {
   0%   { opacity:0; rotate:0deg; }
   12%  { opacity:1; }
@@ -152,7 +150,6 @@ body.kanban-mode .glow-wrap { max-width:640px; }
 @media (prefers-reduced-motion: reduce) {
   .glow-wrap:hover::before { animation:none; }
 }
-
 .input-area {
   position:relative;
   z-index:1;
@@ -163,13 +160,22 @@ body.kanban-mode .glow-wrap { max-width:640px; }
   box-shadow:0 8px 32px rgba(0,0,0,0.06);
 }
 html.dark .input-area { box-shadow:0 8px 32px rgba(0,0,0,0.3); }
-
 .input-main { display:flex; gap:8px; margin-bottom:8px; }
 .input-main textarea {
   flex:1; border:none; font-size:15px; font-family:var(--font-body); color:var(--text);
   outline:none; background:transparent; resize:none; line-height:1.4; min-height:22px;
 }
 .input-main textarea::placeholder { color:var(--text-muted); }
+.input-options { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.opt-select { appearance:none; background:var(--input-bg); border:1px solid var(--border); border-radius:6px; padding:5px 26px 5px 8px; font-size:11px; font-family:var(--font-body); color:var(--text); cursor:pointer; outline:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2.5 4l2.5 2.5 2.5-2.5' stroke='%238A8580' fill='none' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 7px center; transition:border-color 0.15s; }
+.opt-select:focus { border-color:var(--accent); }
+.opt-datetime { background:var(--input-bg); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:11px; font-family:var(--font-body); color:var(--text); outline:none; cursor:pointer; }
+.opt-datetime:focus { border-color:var(--accent); }
+html.dark .opt-datetime::-webkit-calendar-picker-indicator { filter:invert(1); }
+.input-options .spacer { flex:1; }
+.add-btn { background:var(--accent); color:white; border:none; border-radius:8px; padding:7px 18px; font-size:12px; font-weight:600; cursor:pointer; transition:background 0.15s,transform 0.1s; font-family:var(--font-body); }
+.add-btn:hover { background:var(--accent-hover); }
+.add-btn:active { transform:scale(0.97); }
 .input-desc {
   width:100%; border:none; border-top:1px solid var(--border); font-size:12px;
   font-family:var(--font-body); color:var(--text-muted); outline:none; padding:6px 0 4px;
