@@ -112,13 +112,13 @@ header { margin-bottom:36px; }
 .stat-pill strong { color:var(--text); font-weight:600; }
 .stat-pill.has-overdue strong { color:var(--overdue); }
 
-/* INPUT — glass card + Dia-style rotating glow */
+/* INPUT — glass card + brief edge glow on each hover */
 .glow-wrap {
   position:relative;
   border-radius:calc(var(--radius) + 2px);
-  padding:2px;                       /* glow ring thickness */
+  padding:2px;                       /* rim thickness */
   margin-bottom:28px;
-  overflow:hidden;                   /* clips the spinning glow */
+  overflow:hidden;
   isolation:isolate;
 }
 body.kanban-mode .glow-wrap { max-width:640px; }
@@ -137,25 +137,29 @@ body.kanban-mode .glow-wrap { max-width:640px; }
     var(--accent) 250deg,
     #EEF1F5 290deg,
     transparent 360deg);
-  animation:glowSpin 4s linear infinite;
+  opacity:0;
   z-index:0;
 }
-@keyframes glowSpin { to { rotate:360deg; } }
-.glow-wrap:focus-within::before { animation-duration:2.2s; }
+.glow-wrap:hover::before {
+  animation:glowSweep 4s linear 1;   /* one-shot on each hover */
+}
+@keyframes glowSweep {
+  0%   { opacity:0; rotate:0deg; }
+  12%  { opacity:1; }
+  85%  { opacity:1; }
+  100% { opacity:0; rotate:360deg; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .glow-wrap::before { animation:none; }
+  .glow-wrap:hover::before { animation:none; }
 }
 
 .input-area {
   position:relative;
-  z-index:1;                         /* sits above the glow */
-  background:color-mix(in srgb, var(--card) 62%, transparent);
-  backdrop-filter:blur(20px) saturate(160%);
-  -webkit-backdrop-filter:blur(20px) saturate(160%);
+  z-index:1;
+  background:var(--card);            /* opaque = no glow inside the card */
   border:none;
   border-radius:var(--radius);
   padding:18px;
-  transition:box-shadow 0.2s;
   box-shadow:0 8px 32px rgba(0,0,0,0.06);
 }
 html.dark .input-area { box-shadow:0 8px 32px rgba(0,0,0,0.3); }
