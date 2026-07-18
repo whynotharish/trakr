@@ -447,6 +447,105 @@ html.dark { color-scheme: dark; --bg-top: #1A1A1D; }
     .stats-row { grid-template-columns:1fr; }
   }
 
+
+  /* CLASSIC DIARY RESET — final visual layer */
+  :root {
+    --diary-bg: #F4E7C8;
+    --diary-paper: #FFF9E8;
+    --diary-paper-2: #FFF3D1;
+    --diary-line: rgba(37,99,235,0.14);
+    --diary-margin: #E78A7B;
+    --diary-ink: #2D2419;
+    --diary-muted: #7A6B57;
+    --diary-border: #DEC99F;
+    --diary-shadow: 0 14px 32px rgba(91,64,31,0.14);
+  }
+  html.dark {
+    --diary-bg: #201A14;
+    --diary-paper: #2B241C;
+    --diary-paper-2: #342A20;
+    --diary-line: rgba(245,222,179,0.10);
+    --diary-margin: #B76E62;
+    --diary-ink: #F8EED7;
+    --diary-muted: #BFAE95;
+    --diary-border: #574635;
+    --diary-shadow: 0 16px 36px rgba(0,0,0,0.36);
+  }
+  body, html.dark body {
+    background-color: var(--diary-bg) !important;
+    background-image:
+      linear-gradient(90deg, transparent 0 64px, var(--diary-margin) 64px 66px, transparent 66px),
+      repeating-linear-gradient(180deg, var(--diary-paper) 0 30px, var(--diary-line) 30px 31px) !important;
+    color: var(--diary-ink);
+  }
+  .container { max-width:880px; }
+  body.kanban-mode .container { max-width:1240px; }
+  header, .team-bar, .input-area, .stat-pill, .filter-row, .task-item, .kanban-col, .kanban-card, .modal, .theme-panel, .auth-card, .team-card {
+    background:var(--diary-paper) !important;
+    border-color:var(--diary-border) !important;
+    color:var(--diary-ink);
+    box-shadow:var(--diary-shadow) !important;
+    backdrop-filter:none !important;
+  }
+  header {
+    border-radius:12px !important;
+    border-left:5px solid var(--diary-margin) !important;
+    padding:20px 22px !important;
+  }
+  header::after { display:none; }
+  .logo, .auth-card .logo, .team-card .logo {
+    color:var(--diary-ink) !important;
+    font-family:Georgia, 'Times New Roman', serif !important;
+    letter-spacing:-0.8px;
+  }
+  .logo-row::after {
+    content:'Classic diary' !important;
+    color:var(--diary-muted) !important;
+    border:1px solid var(--diary-border) !important;
+    background:var(--diary-paper-2) !important;
+  }
+  .date-text, .task-desc, .task-due, .assignee-badge, .copy-hint, .section-label, .stat-pill, .hdr-btn, .filter-btn, .repeat-btn { color:var(--diary-muted) !important; }
+  .hdr-btn, .filter-btn, .repeat-btn, .opt-select, .opt-datetime, .team-name-pill {
+    background:var(--diary-paper-2) !important;
+    border-color:var(--diary-border) !important;
+    color:var(--diary-ink) !important;
+  }
+  .invite-btn, .signout-btn, .add-btn, .team-btn, .filter-btn.active, .repeat-btn.active, .theme-mode-btn.active {
+    background:var(--accent) !important;
+    border-color:var(--accent) !important;
+    color:#fff !important;
+  }
+  .input-area {
+    border-radius:12px !important;
+    border-left:5px solid var(--diary-margin) !important;
+    padding-top:48px !important;
+  }
+  .input-area::before {
+    content:'Today’s notes' !important;
+    color:var(--diary-muted) !important;
+    font-family:Georgia, 'Times New Roman', serif;
+    font-size:15px !important;
+    letter-spacing:0 !important;
+    text-transform:none !important;
+  }
+  .input-area::after {
+    top:40px !important;
+    height:1px !important;
+    background:var(--diary-line) !important;
+  }
+  .input-main textarea, .input-desc, .subtask-add input, .edit-form textarea, .edit-subtask-item input, .task-name, .k-card-name {
+    color:var(--diary-ink) !important;
+  }
+  .input-main textarea::placeholder, .input-desc::placeholder, .subtask-add input::placeholder { color:var(--diary-muted) !important; }
+  .task-item {
+    border-radius:10px !important;
+    border-left:5px solid var(--diary-margin) !important;
+  }
+  .task-item.done { background:var(--diary-paper-2) !important; }
+  .kanban-col-header { background:var(--diary-paper-2) !important; }
+  .kanban-cards { background:transparent !important; }
+  html.dark .checkbox, html.dark .k-card-check, html.dark .subtask-check { border-color:#6D5A44; }
+
 </style>
 </head>
 <body>
